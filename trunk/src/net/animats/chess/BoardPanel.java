@@ -43,7 +43,7 @@ public class BoardPanel extends JPanel {
 					squares[rank][file].setIcon(null);
 					squares[rank][file].setBorder(null);
 				} else {
-                                        java.net.URL imageURL = BoardPanel.class.getResource("/NET/animats/chess/images/" + theBoard.getPieceAt(rank, file).icon);
+                                        java.net.URL imageURL = BoardPanel.class.getResource("/net/animats/chess/images/" + theBoard.getPieceAt(rank, file).icon);
 					if (imageURL != null)
                                             squares[rank][file].setIcon(new ImageIcon(imageURL));
                                         if (theBoard.IsLastDestination(rank, file)) {
