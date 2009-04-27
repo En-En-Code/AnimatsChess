@@ -73,11 +73,14 @@ class Engine extends Thread {
 					if (thinking) {
 						double timeTaken = Analyse();
 
-						Move chosenMove = ComputerMove(analysis_only);
+						Move chosenMove = ComputerMove();
 
 						AnimatsChess.userInterface.Finished(timeTaken, movesCalculated, chosenMove, (int) movesPerSecond);
 
-						if (analysis_only == true) {
+						if (analysis_only) {
+							// Notify the interface of the suggested move.
+							AnimatsChess.userInterface.SuggestedMove(chosenMove);
+						} else {
 							// If a move was made (not just analysis, notify the interface)
 							AnimatsChess.userInterface.MoveMade(chosenMove);
 						}
@@ -109,12 +112,12 @@ class Engine extends Thread {
 		return move;
 	}
 
-	public Move ComputerMove(_analysis_only) {
+	public Move ComputerMove() {
 		// Choose one of the moves and make it.
 		Move chosenMove = null;
 		for (Move move : immediateMoves) {
 			if (move.result.evaluation == bestMove.evaluation) {
-				if (_analysis_only) {
+				if (analysis_only == false) {
 					theBoard.MakeMove(move);
 					theBoard.SetLastDestination(move);
 				}
@@ -124,9 +127,12 @@ class Engine extends Thread {
 			}
 		}
 	
-		// If the game isn't over, calculate the possible moves the opponent can make.
-		if (theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal()) 
-			immediateMoves = theBoard.DetermineLegalMoves();
+		if (analysis_only == false) {
+			// If the game isn't over, calculate the possible moves the opponent can make.
+			// If analysis_only == false, the turn hasn't changed, so skip this step.
+			if (theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal()) 
+				immediateMoves = theBoard.DetermineLegalMoves();
+		}
 
 		return chosenMove;
 	}

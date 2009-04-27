@@ -49,6 +49,10 @@ public class SwingInterface extends JFrame implements IOInterface {
 		undoItem.setEnabled(true);
 	}
 	
+	public void SuggestedMove (Move _move) {
+		// Popup modal window with hint.
+	}
+	
 	private void UpdateDisplay(Position _position) {
 		boardPanel.SynchronizeDisplay();
         scoreSheet.SynchronizeDisplay();

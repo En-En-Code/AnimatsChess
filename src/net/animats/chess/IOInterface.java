@@ -29,6 +29,15 @@ interface IOInterface {
 	 */
 	void MoveMade(Move _move);
 
+	/** 
+	 * This method is called when the engine has analysed the
+	 * position and calculated a suggested best move.
+	 * It takes a single parameter that is a reference to a
+	 * <code>Move</code> object representing the move that
+	 * was made.
+	 */
+	void SuggestedMove(Move _move);
+
 	/**
 	 * The method to be implemented by a specific instance
 	 * of an interface that ultimately enters the command
