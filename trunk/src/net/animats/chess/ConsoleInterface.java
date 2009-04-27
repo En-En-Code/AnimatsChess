@@ -42,7 +42,7 @@ class ConsoleInterface implements IOInterface {
 				// Other commands can now me issued while the engine is thinking without
 				// triggering the thinking process to start again.
 				System.out.println("\nanalysing position...");
-				engine.StartThinking(true);
+				engine.StartThinking(false);
 			} else { 
 				try {
 					if (!thinking) {
@@ -79,7 +79,7 @@ class ConsoleInterface implements IOInterface {
 						// Other commands can now me issued while the engine is thinking without
 						// triggering the thinking process to start again.
 						System.out.println("\nanalysing position...");
-						// Pass 'false' to indicated that the move should not be made
+						// Pass 'true' to indicated that the move should not be made
 						// after analysis is complete
 						engine.StartThinking(true);
 					} else if (inputLine.equals("white")) {
@@ -214,6 +214,11 @@ class ConsoleInterface implements IOInterface {
 		System.out.println();
 	}
 
+	public void SuggestedMove (Move _move) {
+		// Display the move that is being suggested.
+		System.out.println("\nsuggest playing " + _move.Algebraic() + "\n");
+	}
+	
 	public void MoveMade (Move _move) {
 		// Display the move that was played.
 		System.out.println("\n" + _move.NumberedAlgebraic());

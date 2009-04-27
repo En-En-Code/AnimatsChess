@@ -44,7 +44,7 @@ class XBoardInterface implements IOInterface {
 			while (exiting == false) {
 				if (AnimatsChess.player[theBoard.CurrentPlayer()].computer && thinking == false && engine.theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal()) {
 					thinking = true;
-					engine.StartThinking(true);
+					engine.StartThinking(false);
 				} else { 
 					inputLine = stdin.readLine();
 					if (inputLine.equals("quit")) {
@@ -124,6 +124,9 @@ class XBoardInterface implements IOInterface {
 	 * state of the board.
 	 */
 	public void MoveMade(Move _move) {
+	}
+
+	public void SuggestedMove(Move _move) {
 	}
 }
 
