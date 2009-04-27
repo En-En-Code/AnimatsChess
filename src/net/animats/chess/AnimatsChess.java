@@ -30,7 +30,7 @@ class AnimatsChess {
 		// Start the engine (creating its own thread of execution)
 		engine.start();
                 
-                // Control will return straight away for this thread to run the user interface/
+		// Control will return straight away for this thread to run the user interface/
 		userInterface.Start();
 	}
 }

@@ -397,7 +397,7 @@ class Position {
 		UpdateResult();
 	}
 
-	// This method updates the current Position with the supplied move.
+	// This method updates the current Position by undoing the last move made.
 	public void UndoMove() {
 		Move lastMove = scoreSheet.pop();
 		
@@ -961,7 +961,7 @@ class Position {
 			icon += "queen.png";
 			
 			// These are the standard moves a queen can make. 
-		        standardMoves = new PieceMove[8];
+			standardMoves = new PieceMove[8];
 			standardMoves[0] = new PieceMove(-1, -1, true);
 			standardMoves[1] = new PieceMove(-1, 0, true);
 			standardMoves[2] = new PieceMove(-1, 1, true);

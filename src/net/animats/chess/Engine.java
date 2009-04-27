@@ -5,8 +5,8 @@ import java.util.*;
 class Engine extends Thread {
 
 	// Constants to specify the search depth.
-	private final int LOOK_AHEAD_PLY = 5;
-	private final int MAXIMUM_DEPTH = 6;
+	private final int LOOK_AHEAD_PLY = 6;
+	private final int MAXIMUM_DEPTH = 8;
 
 	private int requestedDepth;
 	private int maxSearchDepth;
