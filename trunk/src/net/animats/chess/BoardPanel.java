@@ -140,7 +140,7 @@ public class BoardPanel extends JPanel {
 						
 						// Human has made a move, so if the other player is computer controlled, start thinking...
 						if (AnimatsChess.player[theBoard.CurrentPlayer()].computer && swingInterface.thinking == false) {
-							swingInterface.StartThinking();
+							swingInterface.StartThinking(true);
 						}
 					}
 				}

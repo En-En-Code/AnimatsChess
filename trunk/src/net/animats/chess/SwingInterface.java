@@ -70,10 +70,10 @@ public class SwingInterface extends JFrame implements IOInterface {
 		//sb.setValue(sb.getMaximum());	
 	}
 	
-	public void StartThinking() {
+	public void StartThinking(Boolean _analysis_only) {
 		thinking = true;
 		thinkingArea.setText(null);
-		engine.StartThinking();
+		engine.StartThinking(_analysis_only);
 	}
 
 	public SwingInterface(Engine _engine) {

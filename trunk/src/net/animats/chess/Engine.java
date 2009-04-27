@@ -33,6 +33,10 @@ class Engine extends Thread {
 
 	private boolean thinking = false;
 
+	// This is set to TRUE if the engine is only providing a hint, 
+    // not making a move.
+	private boolean analysis_only = false;
+
 	Object engineLock = new Object();
 
 	// Store some statistics about the analysis.
@@ -48,9 +52,10 @@ class Engine extends Thread {
 	private SearchResult bestMove;
 	
 	// Wakes up the Engine thread to do the processing.
-	public void StartThinking() {
+	public void StartThinking(Boolean _analysis_only) {
 		synchronized (engineLock) {
 			thinking = true;
+			analysis_only = _analysis_only;
 			engineLock.notifyAll();
 		}
 	}
@@ -67,9 +72,16 @@ class Engine extends Thread {
 				while (theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal() && exiting == false) {
 					if (thinking) {
 						double timeTaken = Analyse();
-						Move chosenMove = ComputerMove();
+
+						Move chosenMove = ComputerMove(analysis_only);
+
 						AnimatsChess.userInterface.Finished(timeTaken, movesCalculated, chosenMove, (int) movesPerSecond);
-						AnimatsChess.userInterface.MoveMade(chosenMove);
+
+						if (analysis_only == true) {
+							// If a move was made (not just analysis, notify the interface)
+							AnimatsChess.userInterface.MoveMade(chosenMove);
+						}
+
 						thinking = false;
 					}
 					engineLock.wait();
@@ -80,7 +92,8 @@ class Engine extends Thread {
 		}
 	}
 
-	// Attempts to update the current position with the supplied move. Returns FALSE if move not possible.
+	// Attempts to update the current position with the supplied move. 
+    // Returns FALSE if move not possible.
 	public Move HumanMove(String _move) {
 		Move move = IsLegalMove(_move);
 		if (move != null) {
@@ -96,13 +109,16 @@ class Engine extends Thread {
 		return move;
 	}
 
-	public Move ComputerMove() {
+	public Move ComputerMove(_analysis_only) {
 		// Choose one of the moves and make it.
 		Move chosenMove = null;
 		for (Move move : immediateMoves) {
 			if (move.result.evaluation == bestMove.evaluation) {
-				theBoard.MakeMove(move);
-				theBoard.SetLastDestination(move);
+				if (_analysis_only) {
+					theBoard.MakeMove(move);
+					theBoard.SetLastDestination(move);
+				}
+
 				chosenMove = move;
 				break;
 			}
