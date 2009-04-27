@@ -42,7 +42,7 @@ class ConsoleInterface implements IOInterface {
 				// Other commands can now me issued while the engine is thinking without
 				// triggering the thinking process to start again.
 				System.out.println("\nanalysing position...");
-				engine.StartThinking();
+				engine.StartThinking(true);
 			} else { 
 				try {
 					if (!thinking) {
@@ -73,6 +73,15 @@ class ConsoleInterface implements IOInterface {
 							AnimatsChess.player[Resources.BLACK].computer = true;
 							AnimatsChess.player[Resources.WHITE].computer = false;
 						}
+					} else if (inputLine.equals("hint")) {
+						thinking = true;
+						// This flag is set to indicate that the engine has started thinking.
+						// Other commands can now me issued while the engine is thinking without
+						// triggering the thinking process to start again.
+						System.out.println("\nanalysing position...");
+						// Pass 'false' to indicated that the move should not be made
+						// after analysis is complete
+						engine.StartThinking(true);
 					} else if (inputLine.equals("white")) {
 						engine.theBoard.setWhoseTurn(Resources.WHITE);
 						AnimatsChess.player[Resources.BLACK].computer = true;
@@ -268,6 +277,3 @@ class ConsoleInterface implements IOInterface {
 		System.out.println ("\n     a b c d e f g h \n");
 	}	
 }
-
-
-
