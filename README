@@ -1,0 +1,13 @@
+AnimatsChess
+-----------------------------------------------------------
+
+AnimatsChess is a simple chess playing program with a 
+variety of user interfaces.
+
+To run the program you will require Java Runtime installed.
+
+Once this is installed, change into the 'classes' directory
+and type 'java -jar AnimatsChess.jar swing' to run the
+GUI interface. Other options include 'console' and 'xboard'.
+
+For further information write to stuartallen1972@gmail.com
