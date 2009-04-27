@@ -26,10 +26,10 @@ public class ScoreSheet extends JTextArea {
 	public void DisplayMove(Move _move) {
 		//	 Display the move that was played.
 		if (_move.madeBy == Resources.WHITE)
-			append(_move.ScoreSheetAlgebraic(theBoard));
+			append(_move.ScoreSheetAlgebraic());
 		else {
 			append("\t");
-			append(_move.ScoreSheetAlgebraic(theBoard));
+			append(_move.ScoreSheetAlgebraic());
 			append("\n");
 		}
 		

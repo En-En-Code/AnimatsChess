@@ -105,9 +105,22 @@ class ConsoleInterface implements IOInterface {
 					else if (inputLine.equals("restart") || inputLine.equals("new")) {
 						engine.Reset();
 						UpdateDisplay(engine.GetCurrentPosition());
-					} else if (inputLine.equals("?")) {
+					} else if (inputLine.equals("sheet") || inputLine.equals("scoresheet")) {
+        				for (Move move : theBoard.getScoreSheet().getArrayList()) {
+        					//   Display the move that was played.
+        					if (move.madeBy == Resources.WHITE)
+								System.out.print(move.ScoreSheetAlgebraic());
+							else {
+								System.out.print("\t");
+								System.out.print(move.ScoreSheetAlgebraic());
+								System.out.print("\n");
+							}
+						}
+						System.out.print("\n");
+					} else if (inputLine.equals("?") || inputLine.equals("help")) {
 						System.out.println("moves     to display legal moves");
 						System.out.println("board     to display the board");
+						System.out.println("sheet     to display the scoresheet");
 						System.out.println("material  to display the material tally");
 						System.out.println("terse     to display level one debugging");
 						System.out.println("normal    to display level two debugging");

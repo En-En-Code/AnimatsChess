@@ -21,7 +21,7 @@ public class MoveStack {
 	}
 
 	public Move peek() {
-		// Return and remove the top item from
+		// Return the top item from
 		// the stack.  Throws an EmptyStackException
 		// if there are no elements on the stack.
 		if (stack.isEmpty())
@@ -35,7 +35,7 @@ public class MoveStack {
 		// if there are no elements on the stack.
 		if (stack.isEmpty())
 			throw new EmptyStackException();
-		return stack.remove(stack.size()-1);
+		return stack.remove(stack.size() -1);
 	}
 
 	public boolean empty() {

@@ -64,7 +64,7 @@ class Move implements Comparable<Move> {
 		}
 	}
 
-	public String ScoreSheetAlgebraic(Position _theBoard) {
+	public String ScoreSheetAlgebraic() {
 		StringBuilder moveString = new StringBuilder();
 		if (madeBy == Resources.BLACK) {
 			moveString.append(Algebraic());
