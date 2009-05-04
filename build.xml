@@ -15,6 +15,9 @@
 		</copy>
         <jar destfile="AnimatsChess.jar">
             <fileset dir="build"/>
+			<manifest>
+				<attribute name="Main-Class" value="net.animats.chess.AnimatsChess"/>
+			</manifest>
         </jar>
     </target>
 
