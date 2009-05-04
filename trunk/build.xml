@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<project name="AnimatsChess" basedir="." default="jar">
+    <property name="src" value="src"/>
+    <property name="output" value="build"/>
+
+    <target name="compile" depends="create">
+        <javac destdir="build">            
+            <src path="${src}"/>            
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+		<copy todir="build">
+			<fileset dir="classes"/>
+		</copy>
+        <jar destfile="AnimatsChess.jar">
+            <fileset dir="build"/>
+        </jar>
+    </target>
+
+    <target name="clean">
+        <delete dir="${output}"/>
+    </target>
+
+    <target name="create" depends="clean">
+        <mkdir dir="${output}"/>
+    </target>
+
+</project>

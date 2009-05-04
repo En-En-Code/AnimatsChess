@@ -5,7 +5,7 @@ import java.util.*;
 class Engine extends Thread {
 
 	// Constants to specify the search depth.
-	private final int LOOK_AHEAD_PLY = 6;
+	private final int LOOK_AHEAD_PLY = 5;
 	private final int MAXIMUM_DEPTH = 8;
 
 	private int requestedDepth;
@@ -149,8 +149,8 @@ class Engine extends Thread {
 		if (random)
 			Shuffle();
 
-		// This loop implements iterative deepening. The facility to look further ahead if the last
-		// move was a take is disabled until the final search depth is reached.
+		// This loop implements iterative deepening. The facility to look further ahead 
+        // if the last move was a take is disabled until the final search depth is reached.
 		for (int index = LOOK_AHEAD_PLY - 1; index > 0; index--) {
 			requestedDepth = LOOK_AHEAD_PLY - index;
 			maxSearchDepth = requestedDepth;
