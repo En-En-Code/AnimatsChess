@@ -3,17 +3,11 @@
     <property name="src" value="src"/>
     <property name="output" value="build"/>
 
-    <target name="compile" depends="create">
-        <javac destdir="build">            
-            <src path="${src}"/>            
-        </javac>
-    </target>
-
     <target name="jar" depends="compile">
 		<copy todir="build">
 			<fileset dir="classes"/>
 		</copy>
-        <jar destfile="AnimatsChess.jar">
+        <jar destfile="bin/AnimatsChess.jar">
             <fileset dir="build"/>
 			<manifest>
 				<attribute name="Main-Class" value="net.animats.chess.AnimatsChess"/>
@@ -21,12 +15,18 @@
         </jar>
     </target>
 
-    <target name="clean">
-        <delete dir="${output}"/>
+    <target name="compile" depends="create">
+        <javac destdir="build">            
+            <src path="${src}"/>            
+        </javac>
     </target>
 
     <target name="create" depends="clean">
         <mkdir dir="${output}"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${output}"/>
     </target>
 
 </project>

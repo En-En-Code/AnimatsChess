@@ -1,8 +1,9 @@
 package net.animats.chess;
 
-/** This stack class is built on an ArrayList and is used to represent the moves played in the game
- *  so far. This class can write the contents of its stack to a file in PGN format so it can be loaded
- *  again later or by another program.
+/** This stack class is built on an ArrayList and is used to represent the 
+    moves played in the game so far. This class can write the contents of 
+    its stack to a file in PGN format so it can be loaded again later or by 
+    another program.
  */ 
  
 import java.util.ArrayList;
@@ -24,12 +25,14 @@ public class MoveStack {
 		// Return the top item from
 		// the stack.  Throws an EmptyStackException
 		// if there are no elements on the stack.
-		if (stack.isEmpty())
+		if (stack.isEmpty()) {
 			throw new EmptyStackException();
+		}
+
 		return stack.get(stack.size() - 1);
 	}
 	
-        public Move pop() {
+	public Move pop() {
 		// Return and remove the top item from
 		// the stack.  Throws an EmptyStackException
 		// if there are no elements on the stack.
@@ -45,5 +48,15 @@ public class MoveStack {
 	
 	public int size() {
 		return stack.size();
+	}
+
+	public boolean save(String _filename) {
+		// Write the move stack out to a PGN file using the name specified.
+
+		if (stack.isEmpty()) {
+			return false;
+		}
+
+		return true;
 	}
 }

@@ -14,15 +14,21 @@ class Move implements Comparable<Move> {
                 
 	GameState stateAfterMove = GameState.UNKNOWN;
         
-        // Possible values for stateAfterMove.
-        enum GameState { IN_PROGRESS, WHITE_IN_CHECK, BLACK_IN_CHECK, UNKNOWN, EXITING, 
-            BLACK_CHECKMATED, WHITE_CHECKMATED, BLACK_STALEMATED, WHITE_STALEMATED, 
-            DRAW_BY_REPETITION, FIFTY_MOVE_DRAW, WHITE_RESIGNED, BLACK_RESIGNED }
+	// Possible values for stateAfterMove.
+	enum GameState { IN_PROGRESS, WHITE_IN_CHECK, BLACK_IN_CHECK, UNKNOWN, 
+					 EXITING, BLACK_CHECKMATED, WHITE_CHECKMATED, 
+					 BLACK_STALEMATED, WHITE_STALEMATED, DRAW_BY_REPETITION, 
+					 FIFTY_MOVE_DRAW, WHITE_RESIGNED, BLACK_RESIGNED }
 	
 	int oldRank;
 	int oldFile;
 	int newRank;
 	int newFile;
+
+	// This information is set if another piece of the same type can move
+	// into the same square as this move.
+	boolean disambiguationOnRank;
+	boolean disambiguationOnFile;
 
 	Position.Piece pieceTaken;
 	Position.Piece pieceMoved;
@@ -37,12 +43,11 @@ class Move implements Comparable<Move> {
 
 	int castling = NOT_CASTLING;
 
-
 	public String toString() {
 		if (pieceTaken == null)
-			return (AsCommand() + " (" + Resources.englishColour[pieceMoved.colour] + " " + pieceMoved.FullName() + " on " + fileLetter[oldFile] + rankNumber[oldRank] + " to " + fileLetter[newFile] + rankNumber[newRank] + ")");
+			return (Algebraic() + " (" + Resources.englishColour[pieceMoved.colour] + " " + pieceMoved.FullName() + " on " + fileLetter[oldFile] + rankNumber[oldRank] + " to " + fileLetter[newFile] + rankNumber[newRank] + ")");
 		else
-			return (AsCommand() + " (" + Resources.englishColour[pieceMoved.colour] + " " + pieceMoved.FullName() + " on " + fileLetter[oldFile] + rankNumber[oldRank] + " takes " + fileLetter[newFile] + rankNumber[newRank] + ")");
+			return (Algebraic() + " (" + Resources.englishColour[pieceMoved.colour] + " " + pieceMoved.FullName() + " on " + fileLetter[oldFile] + rankNumber[oldRank] + " takes " + fileLetter[newFile] + rankNumber[newRank] + ")");
 	}
 
 	Move (int _oldRank, int _oldFile, int _newRank, int _newFile, Position _theBoard) {
@@ -57,7 +62,8 @@ class Move implements Comparable<Move> {
 	
 		if (pieceMoved instanceof Position.Pawn) {
 			if (oldFile != newFile && pieceTaken == null) {
-				// Must be an en passant take, set the pieceTaken to the pawn to be taken.
+				// Must be an en passant take, set the 
+				// pieceTaken to the pawn to be taken.
 				pieceTaken = _theBoard.getPieceAt(_oldRank, _newFile);
 				enPassant = true;
 			}
@@ -70,7 +76,7 @@ class Move implements Comparable<Move> {
 			moveString.append(Algebraic());
 		}else {
 			moveString.append(MoveNumber());
-			moveString.append(". ");
+			moveString.append(".");
 			moveString.append(Algebraic());
 		}
 		
@@ -109,12 +115,26 @@ class Move implements Comparable<Move> {
 				move.append("K");
 			else 
 				move.append("Q");
-		} else if (pieceTaken != null)
+
+			if (disambiguationOnRank) {
+				move.append(rankNumber[oldRank]);
+			}
+
+			if (disambiguationOnFile) {
+				move.append(fileLetter[oldFile]);
+			}
+
+		} else if (pieceTaken != null) {
+			// This is a pawn move that resulting in a piece being taken.
 			move.append(fileLetter[oldFile]);
+		}
 
-		if (pieceTaken != null)
+		if (pieceTaken != null) {
+			// This move resulting in a piece being taken.
 			move.append("x");
+		}
 
+		// Display the destination location.
 		move.append(fileLetter[newFile]);
 		move.append(rankNumber[newRank]);
 
