@@ -10,36 +10,37 @@ public class ScoreSheet extends JTextArea {
 	
 	public ScoreSheet (int _height, int _width, Position _theBoard) {
 		super (_height, _width);
+		setLineWrap(true);
+		setWrapStyleWord(true);
 		setEditable(false);
-		setFont(new Font("SansSerif", Font.PLAIN, 14));
+		setFont(new Font("SansSerif", Font.PLAIN, 12));
+		setForeground(new Color(0, 0, 0));
 		setBorder(BorderFactory.createEtchedBorder());
 		theBoard = _theBoard;
 	}
 	
 	public void SynchronizeDisplay() {
-		setText(null);
+		setText("");
 		for (Move move : theBoard.getScoreSheet().getArrayList()) {
 			DisplayMove(move);
 		}
 	}
 	
 	public void DisplayMove(Move _move) {
-		//	 Display the move that was played.
+		// Display the move that was played.
 		if (_move.madeBy == Resources.WHITE) {
 			append(_move.ScoreSheetAlgebraic());
 			append(" ");
 		} else {
-			append(" ");
-			//append("\t");
 			append(_move.ScoreSheetAlgebraic());
-			//append("\n");
+			append(" ");
 		}
 		
 		if (theBoard.getGameState() == Move.GameState.WHITE_CHECKMATED)
-			append("checkmate: 0-1");
+			append("\n\ncheckmate: 0-1");
 		if (theBoard.getGameState() == Move.GameState.BLACK_CHECKMATED)
-			append("checkmate: 1-0");
+			append("\n\ncheckmate: 1-0");
 		if (theBoard.getGameState() == Move.GameState.WHITE_STALEMATED || theBoard.getGameState() == Move.GameState.BLACK_STALEMATED)
-			append("stalemate: 1/2 - 1/2");
+			append("\n\nstalemate: 1/2 - 1/2");
 	}
 }

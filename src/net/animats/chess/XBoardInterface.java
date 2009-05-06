@@ -31,15 +31,19 @@ class XBoardInterface implements IOInterface {
 		BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 
 		try {
-			// Strip off the leading 'xboard' as this has already been handled by the command line argument.
+			// Strip off the leading 'xboard' as this has already been handled 
+			// by the command line argument.
 			String inputLine = stdin.readLine();
 			if (inputLine.equals("xboard")) {
 				inputLine = stdin.readLine();
 				if (inputLine.equals("protover 2")) {
 					System.out.println("feature reuse=0 sigint=0 sigterm=0 draw=0 myname=\"Animats\" done=1");
 				}
-			} else
+			} else {
 				exiting = true;
+			}
+
+			System.out.println("Animats Chess Engine by Stuart Allen.");
 
 			while (exiting == false) {
 				if (AnimatsChess.player[theBoard.CurrentPlayer()].computer && thinking == false && engine.theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal()) {

@@ -6,7 +6,7 @@ class Engine extends Thread {
 
 	// Constants to specify the search depth.
 	private final int LOOK_AHEAD_PLY = 5;
-	private final int MAXIMUM_DEPTH = 8;
+	private final int MAXIMUM_DEPTH = 6;
 
 	private int requestedDepth;
 	private int maxSearchDepth;
@@ -128,8 +128,9 @@ class Engine extends Thread {
 		}
 	
 		if (analysis_only == false) {
-			// If the game isn't over, calculate the possible moves the opponent can make.
-			// If analysis_only == false, the turn hasn't changed, so skip this step.
+			// If the game isn't over, calculate the possible moves the 
+			// opponent can make. If analysis_only == false, the turn hasn't 
+			// changed, so skip this step.
 			if (theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal()) 
 				immediateMoves = theBoard.DetermineLegalMoves();
 		}
@@ -149,8 +150,9 @@ class Engine extends Thread {
 		if (random)
 			Shuffle();
 
-		// This loop implements iterative deepening. The facility to look further ahead 
-        // if the last move was a take is disabled until the final search depth is reached.
+		// This loop implements iterative deepening. The facility to look 
+		// further ahead  if the last move was a take is disabled until the 
+		// final search depth is reached.
 		for (int index = LOOK_AHEAD_PLY - 1; index > 0; index--) {
 			requestedDepth = LOOK_AHEAD_PLY - index;
 			maxSearchDepth = requestedDepth;
@@ -158,7 +160,8 @@ class Engine extends Thread {
 			SortMoves();
 		}
 
-		// For the last search, enable the extra look-ahead based on moves that take a piece.
+		// For the last search, enable the extra look-ahead based on moves 
+		// that take a piece.
 		requestedDepth = LOOK_AHEAD_PLY;
 		maxSearchDepth = MAXIMUM_DEPTH;
 		bestMove = BuildTree(requestedDepth, -Resources.INFINITY - 1, +Resources.INFINITY + 1);
@@ -193,8 +196,8 @@ class Engine extends Thread {
 			return new SearchResult(theBoard.Evaluate(), 0);
 		}
 		
-		_ply--;
 		// This is not a leaf node, so loop through all the possible moves from this position.
+		_ply--;
 
 		ArrayList<Move> legalMoves;
 

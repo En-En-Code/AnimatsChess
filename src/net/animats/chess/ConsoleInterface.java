@@ -29,7 +29,8 @@ class ConsoleInterface implements IOInterface {
 	public void Start() {
 		BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 
-		System.out.println("\n ANIMATS CHESS ENGINE\n");
+		System.out.println("ANIMATS CHESS ENGINE");
+		System.out.println("(run with the command-line argument 'swing' for a graphical interface)\n");
 
 		UpdateDisplay(engine.GetCurrentPosition());
 		

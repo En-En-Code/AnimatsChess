@@ -16,7 +16,7 @@ class AnimatsChess {
 
 	public static void main(String[] _arguments) {
 		player[Resources.BLACK] = new Player("Computer", true);
-		player[Resources.WHITE] = new Player("You", false);
+		player[Resources.WHITE] = new Player("Human", false);
 
 		if (_arguments.length == 0)
 			userInterface = new ConsoleInterface(engine);

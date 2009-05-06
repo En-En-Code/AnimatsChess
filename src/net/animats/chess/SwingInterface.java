@@ -51,6 +51,8 @@ public class SwingInterface extends JFrame implements IOInterface {
 	
 	public void SuggestedMove (Move _move) {
 		// Popup modal window with hint.
+		MessageDialog hintDialog = new MessageDialog(SwingInterface.this, "Hint", "I recommend playing " + _move.Algebraic());
+		hintDialog.setVisible(true);
 	}
 	
 	private void UpdateDisplay(Position _position) {
@@ -104,7 +106,7 @@ public class SwingInterface extends JFrame implements IOInterface {
 		thinkingArea.setBorder(BorderFactory.createLoweredBevelBorder());
 		thinkingArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		thinkingArea.setForeground(new Color(0, 200, 200));
-		thinkingArea.setBackground(new Color(50, 50, 50));
+		thinkingArea.setBackground(new Color(40, 40, 40));
 		JScrollPane thinkingPane = new JScrollPane(thinkingArea, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		GridBagConstraints thinkingConstraints = new GridBagConstraints();
 		thinkingConstraints.gridx = 0;
@@ -117,7 +119,10 @@ public class SwingInterface extends JFrame implements IOInterface {
 		thinkingConstraints.fill = GridBagConstraints.BOTH;
 		add (thinkingPane, thinkingConstraints);
 		
-		JLabel titleLabel = new JLabel("Human vs Computer");
+		String titleText = AnimatsChess.player[Resources.WHITE].name
+						 + " vs "
+						 + AnimatsChess.player[Resources.BLACK].name;
+		JLabel titleLabel = new JLabel(titleText);
 		titleLabel.setMinimumSize(new Dimension(200, 35));
 		titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		titleLabel.setPreferredSize(titleLabel.getMinimumSize());
@@ -193,6 +198,26 @@ public class SwingInterface extends JFrame implements IOInterface {
 				}
 			});
 		
+		//Add the hint menu item
+		JMenuItem hintItem = gameMenu.add("Hint");
+		hintItem.addActionListener(new
+			ActionListener() {
+				public void actionPerformed(ActionEvent _event) {
+					thinking = true;
+					thinkingArea.setText(null);
+					engine.StartThinking(true);
+				}
+			});
+
+		//Add the quit game menu item
+		JMenuItem quitItem = gameMenu.add("Quit");
+		quitItem.addActionListener(new
+			ActionListener() {
+				public void actionPerformed(ActionEvent _event) {
+					engine.Quit();
+					// What is the correct way to close the Swing interface???
+				}
+			});
 		//Add the options menu.
 		JMenu optionsMenu = new JMenu("Options");
 		menuBar.add(optionsMenu);
@@ -207,7 +232,7 @@ public class SwingInterface extends JFrame implements IOInterface {
 		aboutItem.addActionListener(new 
 			ActionListener() {
 				public void actionPerformed(ActionEvent _event) {
-					AboutDialog aboutDialog = AboutDialog.getInstance(SwingInterface.this);
+					MessageDialog aboutDialog = new MessageDialog(SwingInterface.this, "About", "Animats Chess by Stuart Allen 2007");
 					aboutDialog.setVisible(true);
 				}
 			});

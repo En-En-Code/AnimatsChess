@@ -3,12 +3,13 @@ package net.animats.chess;
 
 import java.util.*;
 
-// This class represents a game position. It is contains an 8 x 8 two dimensional
-// array of Piece objects. Each element object holds a pointer to the piece on it, 
-// or null if it is vacant.
+// This class represents a game position. It is contains an 8 x 8 
+// two-dimensional array of Piece objects. Each element object holds a 
+// pointer to the piece on it, or null if it is vacant.
+
 class Position {
-	// Store a reference to a rook, knight, bishop and kind for the purposes of determining
-	// if a player is in check.
+	// Store a reference to a rook, knight, bishop and king for the purpose 
+    // of determining if a player is in check.
 	private Piece[] moveablePiece = new Piece[4];
 
 	// This is the array that represents the board.
@@ -17,28 +18,30 @@ class Position {
 	// This is a list of all the moves that lead to this position.
 	private MoveStack scoreSheet;
 	
-	// This object is a convenience reference to the move that directly lead to this position.
+	// This object is a convenience reference to the move that directly 
+    // lead to this position.
 	private Move move;
 
-	// This is set to either Resources.BLACK or Resources.WHITE to indicate whose turn it is to 
-	// move from this position.
+	// This is set to either Resources.BLACK or Resources.WHITE to indicate 
+    // whose turn it is to move from this position.
 	private int whoseTurn;
 
 	private int movesSinceLastTake = 0;
 
 	boolean[] castled = new boolean[2];
 
-	// Store the current position of each king to make determining whether either player
-	// is in check faster as this is done regularly.
+	// Store the current position of each king to make determining whether 
+    // either player is in check faster as this is done regularly.
 	public int kingRank[] = new int[2];
 	public int kingFile[] = new int[2];
 
-	// Store the total value of each player's pieces for each given position to allow
-	// the position to be evaluated.
+	// Store the total value of each player's pieces for each given position 
+    // to allow the position to be evaluated.
 	int totalMaterial[] = new int[2];
 	
-	// This modifier is used to multiply any penalties to make them push the evaluation
-	// in the right direction: up for black (to white's advantage), down for white (to black's advantage).
+	// This modifier is used to multiply any penalties to make them push the 
+    // evaluation in the right direction: up for black (to white's advantage), 
+    // down for white (to black's advantage).
 	// This array is indexed by Resources.BLACK and Resources.WHITE
 	private static final int penaltyModifier[] = { 1, -1 };
 	private static final int bonusModifier[] = { -1, 1 };
@@ -153,6 +156,26 @@ class Position {
 					ArrayList<Move> singlePieceMoves = currentPiece.Moves(this, rank, file);
 					if (singlePieceMoves.size() != 0) {
 						legalMoves.addAll(singlePieceMoves);
+					}
+				}
+			}
+		}
+
+		// Loop through all the moves looking for ambiguous references.
+		for (Move currentMove : legalMoves) {
+			if (!(currentMove.pieceMoved instanceof King) && 
+				!(currentMove.pieceMoved instanceof Pawn)) {
+				for (Move innerMove : legalMoves) {
+					if (innerMove != currentMove &&
+						innerMove.newRank == currentMove.newRank &&
+						innerMove.newFile == currentMove.newFile &&
+						innerMove.pieceMoved.type == currentMove.pieceMoved.type) {
+							// This move is an ambiguous move.
+							if (innerMove.oldFile != currentMove.oldFile) {
+								currentMove.disambiguationOnFile = true;
+							} else {
+								currentMove.disambiguationOnRank = true;
+							}
 					}
 				}
 			}
@@ -654,8 +677,17 @@ class Position {
 //	 This abstract class represents the common attributes of all pieces. It is implemented by each
 //	 of the concrete piece classes: King, Queen, Rook, Knight, Bishop and Pawn.
 	abstract class Piece implements Cloneable {
+		public static final int PAWN = 1;
+		public static final int KNIGHT = 2;
+		public static final int BISHOP = 3;
+		public static final int ROOK = 4;
+		public static final int QUEEN = 5;
+		public static final int KING = 6;
+
 		public final int value;
 		public final int colour;
+		public final int type;
+		public final String fullName;
 		public String icon;
 
 		public int moveCount = 0;
@@ -668,22 +700,11 @@ class Position {
 		abstract ArrayList<Move> Moves(Position _theBoard, int _rank, int _file);
 
 		public String toString() {
-			return (Resources.englishColour[colour] + " " + FullName());
+			return (Resources.englishColour[colour] + " " + fullName);
 		}
 
-		public String FullName () {
-			if (this instanceof Pawn) 
-				return ("pawn");
-			else if (this instanceof Rook)
-				return ("rook");
-			else if (this instanceof Knight)
-				return ("knight");
-			else if (this instanceof Bishop)
-				return ("bishop");
-			else if (this instanceof King)
-				return ("king");
-			else 
-				return ("queen");
+		public String FullName() {
+			return fullName;
 		}
 
 		// This method returns a vector of a piece's possible standard moves.
@@ -740,9 +761,13 @@ class Position {
 			return super.clone();
 		}
 
-		Piece (int _colour, int _value) {
+		Piece (int _colour, int _value, int _type, String _fullName) {
 			colour = _colour;
-	                value = _value;
+	        value = _value;
+
+			type = _type;
+			fullName = _fullName;
+
 			if (colour == Resources.BLACK)
 				icon = "b";
 			else
@@ -768,7 +793,7 @@ class Position {
 
 	class Pawn extends Piece implements Cloneable {
 		Pawn (int _colour) {
-			super(_colour, 100);
+			super(_colour, 100, Piece.PAWN, "pawn");
 			icon += "pawn.png";
 			// Pawns do not have any standard moves.
 		}
@@ -884,7 +909,7 @@ class Position {
 
 	class Knight extends Piece implements Cloneable {
 		Knight (int _colour) {
-			super(_colour, 300);
+			super(_colour, 300, Piece.KNIGHT, "knight");
 			icon += "knight.png";
 			
 			// These are the standard moves a knight can make. 
@@ -911,7 +936,7 @@ class Position {
 
 	class Bishop extends Piece implements Cloneable {
 		Bishop (int _colour) {
-			super(_colour, 325);
+			super(_colour, 325, Piece.BISHOP, "bishop");
 			icon += "bishop.png";
 			
 			// These are the standard moves a bishop can make. 
@@ -934,7 +959,7 @@ class Position {
 
 	class Rook extends Piece implements Cloneable {
 		Rook (int _colour) {
-			super(_colour, 500);
+			super(_colour, 500, Piece.ROOK, "rook");
 			icon += "rook.png";
 			
 			// These are the standard moves a rook can make. 
@@ -957,7 +982,7 @@ class Position {
 
 	class Queen extends Piece implements Cloneable {
 		Queen (int _colour) {
-			super(_colour, 900);
+			super(_colour, 900, Piece.QUEEN, "queen");
 			icon += "queen.png";
 			
 			// These are the standard moves a queen can make. 
@@ -984,7 +1009,7 @@ class Position {
 
 	class King extends Piece implements Cloneable {
 		King (int _colour) {
-			super(_colour, Resources.INFINITY);
+			super(_colour, Resources.INFINITY, Piece.KING, "king");
 			icon += "king.png";
 			
 			// These are the standard moves a king can make. 
