@@ -45,8 +45,11 @@ class ConsoleInterface implements IOInterface {
 	public void Start() {
 		BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 
-		System.out.println("ANIMATS CHESS ENGINE");
-		System.out.println("(run with the command-line argument 'swing' for a graphical interface)\n");
+		System.out.println("ANIMATS CHESS ENGINE, Copyright (C) 2005-2009 Stuart Allen, 2022 En-En");
+		System.out.println("ANIMATS CHESS comes with ABSOLUTELY NO WARRANTY; for details type 'warranty'.");
+		System.out.println("This is free software, and you are welcome to redistribute it");
+		System.out.println("under certain conditions; type 'copying' for details.");
+		System.out.println("\n(run with the command-line argument 'swing' for a graphical interface)\n");
 
 		UpdateDisplay(engine.GetCurrentPosition());
 		
@@ -155,6 +158,15 @@ class ConsoleInterface implements IOInterface {
 						System.out.println("restart   to restart the game");
 						System.out.println("quit      to exit the program");
 						System.out.println("\nmoves are entered by typing the rank and file to move from followed by the rank and file to move to, eg: e2e4\n");
+					} else if (inputLine.equals("warranty") {
+						System.out.println("This program is distributed in the hope that it will be useful,");
+						System.out.println("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+						System.out.println("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+						System.out.println("GNU General Public License for more details.");
+					} else if (inputLine.equals("copying") {
+						System.out.println("You should have received a copy of the GNU General Public License");
+						System.out.println("along with this program; if not, write to the Free Software");
+						System.out.println("Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.");
 					} else if (engine.IsLegalMove(inputLine) != null) {
 						engine.HumanMove(inputLine);
 					} else {
