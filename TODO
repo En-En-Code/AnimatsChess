@@ -1,2 +1,4 @@
-Add promotion notation to SAN 
-Allow player to choose piece to promote to.
+Add promotion notation to SAN (DONE)
+Allow player to choose piece to promote to. (DONE)
+Allow player to choose color to play with in swing.
+Have "Configure" do something eventually.

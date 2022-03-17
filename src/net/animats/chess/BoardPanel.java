@@ -90,11 +90,18 @@ public class BoardPanel extends JPanel {
 	
 	private class SquareAction implements ActionListener {
 		
+		private boolean promoting = false;
+		
 		public void actionPerformed(ActionEvent _event) {
 			if (swingInterface.thinking)
 				return;
 			
-			BoardSquare eventSource = (BoardSquare) _event.getSource(); 
+			BoardSquare eventSource = (BoardSquare) _event.getSource();
+			
+			// This board square was created by the promotion dialog,
+			// so do not try to do anything with it
+			if (promoting)
+				return;
 						
 			if (sourceSquare == null) {
 				// There are currently no pieces highlighted.
@@ -127,13 +134,86 @@ public class BoardPanel extends JPanel {
 						highlightedSquare.setBorder(null);
 					highlightedSquare = sourceSquare;
 					sourceSquare.setBorder(new LineBorder(Color.RED, 2));
-				} else{
+				} else {
 					// This is an attempt to move so build the command string
 					StringBuffer commandBuffer = new StringBuffer();
 					commandBuffer.append(Move.fileLetter[sourceSquare.file]);
 					commandBuffer.append(Move.rankNumber[sourceSquare.rank]);
 					commandBuffer.append(Move.fileLetter[eventSource.file]);
 					commandBuffer.append(Move.rankNumber[eventSource.rank]);
+					
+					// Create a window if a pawn is being promoted to allow
+					// the user to select the promotion of their choice
+					if (theBoard.getPieceAt(sourceSquare.rank, sourceSquare.file) != null &&
+						theBoard.getPieceAt(sourceSquare.rank, sourceSquare.file).FullName().equals("pawn") &&
+						(eventSource.rank == 0 || eventSource.rank == 7)) {
+						promoting = true;
+						
+						// Create the squares for the promotion dialog.
+						// Their placement relative to <code>eventSource</code> guarantees it is off the
+						// board and the color of the squares are the same as the square the pawn has moved to.
+						BoardSquare promotionTiles[] = {new BoardSquare(eventSource.rank, eventSource.file - 20),
+														new BoardSquare(eventSource.rank, eventSource.file - 20),
+														new BoardSquare(eventSource.rank, eventSource.file - 20),
+														new BoardSquare(eventSource.rank, eventSource.file - 20)};
+						
+						// Assign the value that each button should return in the menu
+						promotionTiles[0].addActionListener(new ActionListener() {
+			                @Override
+			                public void actionPerformed(ActionEvent e) {
+			                    JOptionPane pane = (JOptionPane)(((JComponent)e.getSource()).getParent().getParent());
+			                    // set the value of the option pane
+			                    pane.setValue(promotionTiles[0]);
+			                }
+			            });
+						// Yes, I have to write this nearly identical code four times; I tried looping it
+						promotionTiles[1].addActionListener(new ActionListener() {
+			                @Override
+			                public void actionPerformed(ActionEvent e) {
+			                    JOptionPane pane = (JOptionPane)(((JComponent)e.getSource()).getParent().getParent());
+			                    // set the value of the option pane
+			                    pane.setValue(promotionTiles[1]);
+			                }
+			            });
+						// The unresolved loop variable in the internal function causes an error
+						promotionTiles[2].addActionListener(new ActionListener() {
+			                @Override
+			                public void actionPerformed(ActionEvent e) {
+			                    JOptionPane pane = (JOptionPane)(((JComponent)e.getSource()).getParent().getParent());
+			                    // set the value of the option pane
+			                    pane.setValue(promotionTiles[2]);
+			                }
+			            });
+						// Why does Java have to be like this?
+						promotionTiles[3].addActionListener(new ActionListener() {
+			                @Override
+			                public void actionPerformed(ActionEvent e) {
+			                    JOptionPane pane = (JOptionPane)(((JComponent)e.getSource()).getParent().getParent());
+			                    // set the value of the option pane
+			                    pane.setValue(promotionTiles[3]);
+			                }
+			            });
+						
+						// Put the pictures of the pieces in the squares
+						promotionTiles[0].setIcon(new ImageIcon(BoardPanel.class.getResource("/net/animats/chess/images/wqueen.png")));
+						promotionTiles[1].setIcon(new ImageIcon(BoardPanel.class.getResource("/net/animats/chess/images/wrook.png")));
+						promotionTiles[2].setIcon(new ImageIcon(BoardPanel.class.getResource("/net/animats/chess/images/wbishop.png")));
+						promotionTiles[3].setIcon(new ImageIcon(BoardPanel.class.getResource("/net/animats/chess/images/wknight.png")));
+						
+						// Create the dialog box that comes up when promoting and keep
+						// showing it so long as the player has not selected a piece
+						int promotionChoice = JOptionPane.CLOSED_OPTION;
+						while (promotionChoice == JOptionPane.CLOSED_OPTION) {
+							promotionChoice = JOptionPane.showOptionDialog(swingInterface, null, "Promote Pawn",
+									JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, promotionTiles, promotionTiles[0]);
+						}
+						
+						// Convert the choice into a number to use for <code>promotionLetter</code>
+						promotionChoice = -promotionChoice + 5;
+						commandBuffer.append(Move.promotionLetter[promotionChoice]);
+						promoting = false;
+					}
+					
 					String command = commandBuffer.toString();
 					
 					if (engine.IsLegalMove(command) != null) {
