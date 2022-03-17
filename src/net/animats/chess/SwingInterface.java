@@ -1,3 +1,22 @@
+/*
+ * Animats Chess Engine, started 8 August 2005, played its first game 9 September 2005
+ * Copyright (C) 2005-2009 Stuart Allen, 2022 En-En
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 package net.animats.chess;
 
 import javax.swing.*;
@@ -51,8 +70,7 @@ public class SwingInterface extends JFrame implements IOInterface {
 	
 	public void SuggestedMove (Move _move) {
 		// Popup modal window with hint.
-		MessageDialog hintDialog = new MessageDialog(SwingInterface.this, "Hint", "I recommend playing " + _move.Algebraic());
-		hintDialog.setVisible(true);
+		JOptionPane.showMessageDialog(SwingInterface.this, "I recommend playing " + _move.Algebraic() + ".", "Hint", JOptionPane.PLAIN_MESSAGE);
 	}
 	
 	private void UpdateDisplay(Position _position) {
@@ -232,8 +250,33 @@ public class SwingInterface extends JFrame implements IOInterface {
 		aboutItem.addActionListener(new 
 			ActionListener() {
 				public void actionPerformed(ActionEvent _event) {
-					MessageDialog aboutDialog = new MessageDialog(SwingInterface.this, "About", "Animats Chess by Stuart Allen 2007");
-					aboutDialog.setVisible(true);
+					JOptionPane.showMessageDialog(SwingInterface.this, "ANIMATS CHESS by Stuart Allen 2005-09", "About", JOptionPane.PLAIN_MESSAGE);
+				}
+			});
+		
+		JMenuItem warrantyItem = helpMenu.add("Warranty");
+		warrantyItem.addActionListener(new 
+			ActionListener() {
+				public void actionPerformed(ActionEvent _event) {
+					JOptionPane.showMessageDialog(SwingInterface.this,
+					"This program is distributed in the hope that it will be useful,\n" +
+    					"but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
+    					"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
+   					"GNU General Public License for more details.",
+   					"Warranty", JOptionPane.PLAIN_MESSAGE);
+				}
+			});
+		
+		JMenuItem copyingItem = helpMenu.add("Copying");
+		copyingItem.addActionListener(new 
+			ActionListener() {
+				public void actionPerformed(ActionEvent _event) {
+					JOptionPane.showMessageDialog(SwingInterface.this,
+					"This program is free software; you can redistribute it and/or modify\n" +
+    					"it under the terms of the GNU General Public License as published by\n" +
+    					"the Free Software Foundation; either version 2 of the License, or\n" +
+    					"(at your option) any later version.",
+   					"Copying", JOptionPane.PLAIN_MESSAGE);
 				}
 			});
 		
