@@ -6,11 +6,12 @@ package net.animats.chess;
 class Move implements Comparable<Move> {
 	static final char[] fileLetter = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
 	static final char[] rankNumber = { '1', '2', '3', '4', '5', '6', '7', '8' };
-
+	static final char[] promotionLetter = { '\0', '\0', 'n', 'b', 'r', 'q' };
+	static final String[] promotionName = { "knight", "bishop", "rook", "queen" };
+	
 	static final int NOT_CASTLING = 0;
 	static final int QUEEN_SIDE = 1;
 	static final int KING_SIDE = 2;
-	
                 
 	GameState stateAfterMove = GameState.UNKNOWN;
         
@@ -33,7 +34,8 @@ class Move implements Comparable<Move> {
 	Position.Piece pieceTaken;
 	Position.Piece pieceMoved;
 
-	boolean promotedPawn = false;
+	int promotionPiece = 0;
+	boolean pawnPromoted = false;
 	boolean enPassant = false;
 
 	SearchResult result;
@@ -44,13 +46,12 @@ class Move implements Comparable<Move> {
 	int castling = NOT_CASTLING;
 
 	public String toString() {
-		if (pieceTaken == null)
-			return (Algebraic() + " (" + Resources.englishColour[pieceMoved.colour] + " " + pieceMoved.FullName() + " on " + fileLetter[oldFile] + rankNumber[oldRank] + " to " + fileLetter[newFile] + rankNumber[newRank] + ")");
-		else
-			return (Algebraic() + " (" + Resources.englishColour[pieceMoved.colour] + " " + pieceMoved.FullName() + " on " + fileLetter[oldFile] + rankNumber[oldRank] + " takes " + fileLetter[newFile] + rankNumber[newRank] + ")");
+		return (Algebraic() + " (" + Resources.englishColour[pieceMoved.colour] + " " + pieceMoved.FullName() + " on " +
+				fileLetter[oldFile] + rankNumber[oldRank] + ((pieceTaken == null) ? " to " : " takes ") +
+				fileLetter[newFile] + rankNumber[newRank] + ((pawnPromoted) ? (", promotes to " + promotionName[promotionPiece -2]) : "") + ")");
 	}
 
-	Move (int _oldRank, int _oldFile, int _newRank, int _newFile, Position _theBoard) {
+	Move (int _oldRank, int _oldFile, int _newRank, int _newFile, int _promotionPiece, Position _theBoard) {
 		oldRank = _oldRank;
 		oldFile = _oldFile;
 		newRank = _newRank;
@@ -66,6 +67,10 @@ class Move implements Comparable<Move> {
 				// pieceTaken to the pawn to be taken.
 				pieceTaken = _theBoard.getPieceAt(_oldRank, _newFile);
 				enPassant = true;
+			} else if (newRank == 0 || newRank == 7) {
+				// Check for a promotion and act accordingly
+				promotionPiece = _promotionPiece;
+				pawnPromoted = true;
 			}
 		}
 	}
@@ -74,7 +79,7 @@ class Move implements Comparable<Move> {
 		StringBuilder moveString = new StringBuilder();
 		if (madeBy == Resources.BLACK) {
 			moveString.append(Algebraic());
-		}else {
+		} else {
 			moveString.append(MoveNumber());
 			moveString.append(".");
 			moveString.append(Algebraic());
@@ -89,7 +94,7 @@ class Move implements Comparable<Move> {
 		if (madeBy == Resources.BLACK) {
 			moveString.append(". ... ");
 			moveString.append(Algebraic());
-		}else {
+		} else {
 			moveString.append(". ");
 			moveString.append(Algebraic());
 		}
@@ -137,6 +142,10 @@ class Move implements Comparable<Move> {
 		// Display the destination location.
 		move.append(fileLetter[newFile]);
 		move.append(rankNumber[newRank]);
+		
+		// If promotion, append the promotion piece
+		if (pawnPromoted)
+			move.append(("=" + promotionLetter[promotionPiece]).toUpperCase());
 
 		if (stateAfterMove == GameState.WHITE_CHECKMATED || stateAfterMove == GameState.BLACK_CHECKMATED)
 			move.append("#");
@@ -147,7 +156,8 @@ class Move implements Comparable<Move> {
 	}
 
 	public String AsCommand() {
-		return ("" + fileLetter[oldFile] + rankNumber[oldRank] + fileLetter[newFile] + rankNumber[newRank]);
+		return ("" + fileLetter[oldFile] + rankNumber[oldRank] + fileLetter[newFile] + rankNumber[newRank]
+				+ (pawnPromoted ? promotionLetter[promotionPiece] : "") );
 	}
 
 	/**

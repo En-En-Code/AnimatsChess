@@ -284,14 +284,14 @@ class Engine extends Thread {
 		StringBuilder principalVariation = new StringBuilder();
 		
 		if (_firstMove.madeBy == Resources.BLACK)
-			principalVariation.append(Integer.toString(_firstMove.moveNumber) + "...");
+			principalVariation.append(Integer.toString(_firstMove.MoveNumber()) + "...");
 		
 		Move move = _firstMove;
 		
 		do {
 			if (move.madeBy == Resources.WHITE) {
 				principalVariation.append(" ");
-				principalVariation.append(Integer.toString(move.moveNumber));
+				principalVariation.append(Integer.toString(move.MoveNumber()));
 				principalVariation.append(". ");
 			} else
 				principalVariation.append(" ");
@@ -309,7 +309,7 @@ class Engine extends Thread {
 	}
 
 	/**
-	 * This method sorts the immediate moves that can be makefrom this position into an order based on their 
+	 * This method sorts the immediate moves that can be made from this position into an order based on their
 	 * evaluations. This is done to speed up alpha-beta pruning.
 	 */
 	private void SortMoves() {
