@@ -138,7 +138,7 @@ class XBoardInterface implements IOInterface {
 	 * regarding the engine's thinking is to be displayed.
 	 */
 	public void Thinking(int _ply, int _evaluation, double _time, int _nodes, String _line){
-		System.out.println("" + _ply + " " + _evaluation + " " + (long) _time + " " + _nodes + " " + _line);
+		System.out.println("" + _ply + " " + _evaluation + " " + (long)(_time / 10) + " " + _nodes + " " + _line);
 	}
 
 	/**
@@ -151,7 +151,7 @@ class XBoardInterface implements IOInterface {
 
 	/**
 	 * This method is called when the board has changed and
-	 * the display needs to be updated to relfect the change.
+	 * the display needs to be updated to reflect the change.
 	 * It takes a single parameter that is a reference to a
 	 * <code>Position</code> object representing the new
 	 * state of the board.

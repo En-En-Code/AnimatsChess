@@ -346,7 +346,7 @@ class Position {
 				// Set as an empty square by default, then add the pieces...
 				squares[rank][file] = null;
 
-				// Put all the pieces on the first and eigth ranks. Store a pointer to a 
+				// Put all the pieces on the first and eighth ranks. Store a pointer to a
 				// rook, bishop, knight and king for the purpose of determining if the
 				// player is in check.
 				if (rank == 0 || rank == 7) {
@@ -405,10 +405,26 @@ class Position {
 			squares[_move.oldRank][_move.newFile] = null;
 		}
 
-		// Promote the pawn if required and increase the moving players material.
+		// Promote the pawn if required and increase the moving player's material.
 		if (_move.pieceMoved instanceof Pawn && (_move.newRank == 0 || _move.newRank == 7)) {
-			squares[_move.newRank][_move.newFile] = new Queen(_move.pieceMoved.colour);	
-			totalMaterial[_move.pieceMoved.colour] += 800;
+			switch (_move.promotionPiece) {
+				case Piece.KNIGHT:
+					squares[_move.newRank][_move.newFile] = new Knight(_move.pieceMoved.colour);
+					totalMaterial[_move.pieceMoved.colour] += 200;
+					break;
+				case Piece.BISHOP:
+					squares[_move.newRank][_move.newFile] = new Bishop(_move.pieceMoved.colour);
+					totalMaterial[_move.pieceMoved.colour] += 200;
+					break;
+				case Piece.ROOK:
+					squares[_move.newRank][_move.newFile] = new Rook(_move.pieceMoved.colour);
+					totalMaterial[_move.pieceMoved.colour] += 400;
+					break;
+				case Piece.QUEEN:
+					squares[_move.newRank][_move.newFile] = new Queen(_move.pieceMoved.colour);
+					totalMaterial[_move.pieceMoved.colour] += 800;
+					break;
+			}
 		} else {
 			// Move the piece from its old square to the new square.
 			squares[_move.newRank][_move.newFile] = _move.pieceMoved;
@@ -463,7 +479,14 @@ class Position {
 		
 		// Demote the pawn if required and decrease the moving players material.
 		if (lastMove.pieceMoved instanceof Pawn && (lastMove.newRank == 0 || lastMove.newRank == 7)) {
-			totalMaterial[lastMove.pieceMoved.colour] -= 800;
+			if (squares[lastMove.newRank][lastMove.newFile] instanceof Knight)
+				totalMaterial[lastMove.pieceMoved.colour] -= 200;
+			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Bishop)
+				totalMaterial[lastMove.pieceMoved.colour] -= 200;
+			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Rook)
+				totalMaterial[lastMove.pieceMoved.colour] -= 400;
+			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Queen)
+				totalMaterial[lastMove.pieceMoved.colour] -= 800;
 		} 
 
 		// Move the piece from its old square to the new square.
@@ -713,7 +736,7 @@ class Position {
 		public PieceMove[] standardMoves;
 		public boolean moveRepeatable;
 
-		// This abstract method is implented differently by each specific type of piece.
+		// This abstract method is implemented differently by each specific type of piece.
 		// It returns a vector of all the pieces possible standard and special moves.
 		abstract ArrayList<Move> Moves(Position _theBoard, int _rank, int _file);
 
@@ -741,25 +764,25 @@ class Position {
 					workingRank += standardMove.rankOffset;
 					workingFile += standardMove.fileOffset;
 
-					// Discard the move and any further repititions if it takes the piece off the board.
+					// Discard the move and any further repetitions if it takes the piece off the board.
 					if (workingRank < 0 || workingRank > 7 || workingFile < 0 || workingFile > 7)
 						break;
 
 					// Check if the destination square has a piece on it.
 					if (_theBoard.squares[workingRank][workingFile] != null) {
 						if (_theBoard.squares[workingRank][workingFile].colour == this.colour) {
-							// Discard this move and any further repititions as the destination
-							// sqaure contains a piece of the same colour.
+							// Discard this move and any further repetitions as the destination
+							// square contains a piece of the same colour.
 							break;
 						} else {
-							// Accept the current move and ignore any further repititions if 
+							// Accept the current move and ignore any further repetitions if
 							// this move takes an opposing piece.
 							keepRepeating = false;
 						}
 					}
 					
 					// Create a new Move represent the this move
-					Move newMove = new Move(_rank, _file, workingRank, workingFile, _theBoard);
+					Move newMove = new Move(_rank, _file, workingRank, workingFile, 0, _theBoard);
 
 					// Discard this move and any further repetitions if the move results in the
 					// player's king being in check.
@@ -842,24 +865,39 @@ class Position {
 			
 			if (_theBoard.squares[_rank + rankOffset][_file] == null) {	
 				// Create a new Move represent the this move
-				Move newMove = new Move(_rank, _file, _rank + rankOffset, _file, _theBoard);
+				if (_rank + rankOffset != 0 && _rank + rankOffset != 7) {
+					// The pawn does not promote with this move
+					Move newMove = new Move(_rank, _file, _rank + rankOffset, _file, 0, _theBoard);
 
-				// Discard this move and any further repetitions if the move results in the
-				// player's king being in check.
-				if (_theBoard.MoveIntoCheck(newMove) == false)
-					possibleMoves.add(newMove);					
+					// Discard this move and any further repetitions if the move results in the
+					// player's king being in check.
+					if (_theBoard.MoveIntoCheck(newMove) == false)
+						possibleMoves.add(newMove);
+				} else {
+					// The pawn would promote with this move
+					Move newMove = new Move(_rank, _file, _rank + rankOffset, _file, 2, _theBoard);
+					
+					// Discard this move and any further repetitions if the move results in the
+					// player's king being in check.
+					// Otherwise, add the rest of the promotion possibilities to the list of moves.
+					if (_theBoard.MoveIntoCheck(newMove) == false) {
+						possibleMoves.add(newMove);
+						for (int promotionNumber = 3; promotionNumber <= 5; promotionNumber++)
+							possibleMoves.add(new Move(_rank, _file, _rank + rankOffset, _file, promotionNumber, _theBoard));
+					}
+				}
 			}
 
 			// If the two squares 'ahead' are empty and the pawn hasn't yet moved, try moving there.
 			if (moveCount == 0) {
 				if (_theBoard.squares[_rank + rankOffset][_file] == null && _theBoard.squares[_rank + initialRankOffset][_file] == null) {	
 					// Create a new Move represent the this move
-					Move newMove = new Move(_rank, _file, _rank + initialRankOffset, _file, _theBoard);
+					Move newMove = new Move(_rank, _file, _rank + initialRankOffset, _file, 0, _theBoard);
 				
 					// Discard this move and any further repetitions if the move results in the
 					// player's king being in check.
 					if (_theBoard.MoveIntoCheck(newMove) == false)
-						possibleMoves.add(newMove);					
+						possibleMoves.add(newMove);		
 				}
 			}
 			
@@ -867,12 +905,27 @@ class Position {
 			if (_file - 1 > -1) {
 				if (_theBoard.squares[_rank + rankOffset][_file - 1] != null &&  _theBoard.squares[_rank + rankOffset][_file - 1].colour != colour) {
 					// Create a new Move represent the this move
-					Move newMove = new Move(_rank, _file, _rank + rankOffset, _file - 1, _theBoard);
-				
-					// Discard this move and any further repetitions if the move results in the
-					// player's king being in check.
-					if (_theBoard.MoveIntoCheck(newMove) == false)
-						possibleMoves.add(newMove);					
+					if (_rank + rankOffset != 0 && _rank + rankOffset != 7) {
+						// The pawn does not promote this move
+						Move newMove = new Move(_rank, _file, _rank + rankOffset, _file - 1, 0, _theBoard);
+					
+						// Discard this move and any further repetitions if the move results in the
+						// player's king being in check.
+						if (_theBoard.MoveIntoCheck(newMove) == false)
+							possibleMoves.add(newMove);
+					} else {
+						// The pawn would promote with this move
+						Move newMove = new Move(_rank, _file, _rank + rankOffset, _file - 1, 2, _theBoard);
+						
+						// Discard this move and any further repetitions if the move results in the
+						// player's king being in check.
+						// Otherwise, add the rest of the promotion possibilities to the list of moves.
+						if (_theBoard.MoveIntoCheck(newMove) == false) {
+							possibleMoves.add(newMove);
+							for (int promotionNumber = 3; promotionNumber <= 5; promotionNumber++)
+								possibleMoves.add(new Move(_rank, _file, _rank + rankOffset, _file - 1, promotionNumber, _theBoard));
+						}
+					}
 				}
 				if (_theBoard.squares[_rank][_file - 1] != null 
 				    && lastMove != null
@@ -881,7 +934,7 @@ class Position {
 				    && _theBoard.squares[_rank][_file - 1] == lastMove.pieceMoved
 				    && Math.abs(lastMove.oldRank - lastMove.newRank) == 2) {
 					// Create a new Move represent the this move
-					Move newMove = new Move (_rank, _file, _rank + rankOffset, _file - 1, _theBoard);
+					Move newMove = new Move (_rank, _file, _rank + rankOffset, _file - 1, 0, _theBoard);
 					
 					// Discard this move and any further repetitions if the move results in the
 					// player's king being in check.
@@ -894,12 +947,27 @@ class Position {
 			if (_file + 1 < 8) {
 				if (_theBoard.squares[_rank + rankOffset][_file + 1] != null &&  _theBoard.squares[_rank + rankOffset][_file + 1].colour != colour) {
 					// Create a new Move represent the this move
-					Move newMove = new Move(_rank, _file, _rank + rankOffset, _file + 1, _theBoard);
-				
-					// Discard this move and any further repetitions if the move results in the
-					// player's king being in check.
-					if (_theBoard.MoveIntoCheck(newMove) == false)
-						possibleMoves.add(newMove);					
+					if (_rank + rankOffset != 0 && _rank + rankOffset != 7) {
+						// The pawn does not promote this move
+						Move newMove = new Move(_rank, _file, _rank + rankOffset, _file + 1, 0, _theBoard);
+					
+						// Discard this move and any further repetitions if the move results in the
+						// player's king being in check.
+						if (_theBoard.MoveIntoCheck(newMove) == false)
+							possibleMoves.add(newMove);
+					} else {
+						// The pawn would promote with this move
+						Move newMove = new Move(_rank, _file, _rank + rankOffset, _file + 1, 2, _theBoard);
+						
+						// Discard this move and any further repetitions if the move results in the
+						// player's king being in check.
+						// Otherwise, add the rest of the promotion possibilities to the list of moves.
+						if (_theBoard.MoveIntoCheck(newMove) == false) {
+							possibleMoves.add(newMove);
+							for (int promotionNumber = 3; promotionNumber <= 5; promotionNumber++)
+								possibleMoves.add(new Move(_rank, _file, _rank + rankOffset, _file + 1, promotionNumber, _theBoard));
+						}
+					}	
 				}
 				if (_theBoard.squares[_rank][_file + 1] != null 
 				    && lastMove != null
@@ -908,7 +976,7 @@ class Position {
 				    && _theBoard.squares[_rank][_file + 1] == lastMove.pieceMoved
 				    && Math.abs(lastMove.oldRank - lastMove.newRank) == 2) {
 					// Create a new Move represent the this move
-					Move newMove = new Move (_rank, _file, _rank + rankOffset, _file + 1, _theBoard);
+					Move newMove = new Move (_rank, _file, _rank + rankOffset, _file + 1, 0, _theBoard);
 					
 					// Discard this move and any further repetitions if the move results in the
 					// player's king being in check.
@@ -958,7 +1026,7 @@ class Position {
 			icon += "bishop.png";
 			
 			// These are the standard moves a bishop can make. 
-		    standardMoves = new PieceMove[4];
+		    	standardMoves = new PieceMove[4];
 			standardMoves[0] = new PieceMove(-1, -1, true);
 			standardMoves[1] = new PieceMove(-1, 1, true);
 			standardMoves[2] = new PieceMove(1, -1, true);
@@ -981,7 +1049,7 @@ class Position {
 			icon += "rook.png";
 			
 			// These are the standard moves a rook can make. 
-		    standardMoves = new PieceMove[4];
+		    	standardMoves = new PieceMove[4];
 			standardMoves[0] = new PieceMove(-1, 0, true);
 			standardMoves[1] = new PieceMove(1, 0, true);
 			standardMoves[2] = new PieceMove(0, -1, true);
@@ -1031,7 +1099,7 @@ class Position {
 			icon += "king.png";
 			
 			// These are the standard moves a king can make. 
-		        standardMoves = new PieceMove[8];
+		    	standardMoves = new PieceMove[8];
 			standardMoves[0] = new PieceMove(-1, -1, false);
 			standardMoves[1] = new PieceMove(-1, 0, false);
 			standardMoves[2] = new PieceMove(-1, 1, false);
@@ -1058,7 +1126,7 @@ class Position {
 								!_theBoard.SquareAttacked(7, 3, colour)) {
 								
 								// Queenside castling is okay so create a Position for the move
-								Move newMove = new Move(7, 4, 7, 2, _theBoard);
+								Move newMove = new Move(7, 4, 7, 2, 0, _theBoard);
 								newMove.castling = Move.QUEEN_SIDE;
 
 								// Add the move to the list
@@ -1075,7 +1143,7 @@ class Position {
 								!_theBoard.SquareAttacked(7, 6, colour)) {
 								
 								// King-side castling is okay so create a Position for the move
-								Move newMove = new Move(7, 4, 7, 6, _theBoard);
+								Move newMove = new Move(7, 4, 7, 6, 0, _theBoard);
 								newMove.castling = Move.KING_SIDE;
 
 								// Add the move to the list
@@ -1094,7 +1162,7 @@ class Position {
 								!_theBoard.SquareAttacked(0, 3, colour)) {
 								
 								// Queen-side castling is okay so create a Position for the move
-								Move newMove = new Move(0, 4, 0, 2, _theBoard);
+								Move newMove = new Move(0, 4, 0, 2, 0, _theBoard);
 								newMove.castling = Move.QUEEN_SIDE;
 
 								// Add the move to the list
@@ -1111,7 +1179,7 @@ class Position {
 								!_theBoard.SquareAttacked(0, 6, colour)) {
 								
 								// King-side castling is okay so create a Position for the move
-								Move newMove = new Move(0, 4, 0, 6, _theBoard);
+								Move newMove = new Move(0, 4, 0, 6, 0, _theBoard);
 								newMove.castling = Move.KING_SIDE;
 
 								// Add the move to the list

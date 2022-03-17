@@ -128,8 +128,8 @@ class ConsoleInterface implements IOInterface {
 					} else if (inputLine.equals("moves")) 
 						DisplayLegalMoves();
 					else if (inputLine.equals("material")) {
-						System.out.println("white material: " + engine.GetCurrentPosition().totalMaterial[Resources.WHITE] + ", black matierial: " + engine.GetCurrentPosition().totalMaterial[Resources.BLACK]);
-						} else if (inputLine.equals("board")) 
+						System.out.println("white material: " + engine.GetCurrentPosition().totalMaterial[Resources.WHITE] + ", black material: " + engine.GetCurrentPosition().totalMaterial[Resources.BLACK]);
+					} else if (inputLine.equals("board")) 
 						UpdateDisplay(engine.GetCurrentPosition());
 					else if (inputLine.equals("restart") || inputLine.equals("new")) {
 						engine.Reset();
@@ -173,9 +173,9 @@ class ConsoleInterface implements IOInterface {
 						if (!inputLine.equals(""))
 							System.out.println(inputLine + " is not a legal command or move\n");
 					}
-    				} catch ( IOException error ) {
-        				System.err.println( "error reading stdin: " + error );
-    				}
+				} catch ( IOException error ) {
+    				System.err.println( "error reading stdin: " + error );
+				}
 			}
 		// Check if the last command typed has ended the game either by resigning or winning
 		// and keeping looping for more user input if the game is still active.
