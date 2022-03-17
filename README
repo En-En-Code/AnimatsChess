@@ -1,4 +1,4 @@
-AnimatsChess                                    4th of May 2009
+AnimatsChess
 ---------------------------------------------------------------
 
 AnimatsChess is a simple chess playing program with a 
@@ -13,4 +13,5 @@ interface. Other command-line options include 'console'
 
 To recompile type 'ant' from the root of the distribution.
 
-For further information write to stuartallen1972@gmail.com
+The project is currently being maintained by En-En-Code on
+GitHub, where you can contact someone for more information.
