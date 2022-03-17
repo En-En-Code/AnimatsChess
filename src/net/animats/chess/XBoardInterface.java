@@ -1,7 +1,23 @@
+/*
+ * Animats Chess Engine, started 8 August 2005, played its first game 9 September 2005
+ * Copyright (C) 2005-2009 Stuart Allen, 2022 En-En
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 package net.animats.chess;
-// Animats Chess Engine
-// started 8 August 2005
-// played its first game 9 September 2005
 
 import java.io.*;
 
@@ -29,6 +45,12 @@ class XBoardInterface implements IOInterface {
 	public void Start() {
 
 		BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+		
+		System.out.println("ANIMATS CHESS ENGINE, Copyright (C) 2005-2009 Stuart Allen, 2022 En-En");
+		System.out.println("ANIMATS CHESS comes with ABSOLUTELY NO WARRANTY; for details type 'warranty'.");
+		System.out.println("This is free software, and you are welcome to redistribute it");
+		System.out.println("under certain conditions; type 'copying' for details.");
+		System.out.println("\n(run with the command-line argument 'swing' for a graphical interface)\n");
 
 		try {
 			// Strip off the leading 'xboard' as this has already been handled 
@@ -42,8 +64,6 @@ class XBoardInterface implements IOInterface {
 			} else {
 				exiting = true;
 			}
-
-			System.out.println("Animats Chess Engine by Stuart Allen.");
 
 			while (exiting == false) {
 				if (AnimatsChess.player[theBoard.CurrentPlayer()].computer && thinking == false && engine.theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal()) {
@@ -90,6 +110,15 @@ class XBoardInterface implements IOInterface {
 						AnimatsChess.player[Resources.BLACK].computer = false;
 					} else if (inputLine.equals("restart")) {
 						engine.Reset();
+					} else if (inputLine.equals("warranty")) {
+						System.out.println("This program is distributed in the hope that it will be useful,");
+						System.out.println("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+						System.out.println("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+						System.out.println("GNU General Public License for more details.");
+					} else if (inputLine.equals("copying")) {
+						System.out.println("You should have received a copy of the GNU General Public License");
+						System.out.println("along with this program; if not, write to the Free Software");
+						System.out.println("Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.");
 					} else if (engine.IsLegalMove(inputLine) != null)
 						engine.HumanMove(inputLine);
 				}
