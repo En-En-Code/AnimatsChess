@@ -96,13 +96,11 @@ class Move implements Comparable<Move> {
 
 	public String ScoreSheetAlgebraic() {
 		StringBuilder moveString = new StringBuilder();
-		if (madeBy == Resources.BLACK) {
-			moveString.append(Algebraic());
-		} else {
+		if (madeBy == Resources.WHITE) {
 			moveString.append(MoveNumber());
 			moveString.append(".");
-			moveString.append(Algebraic());
 		}
+		moveString.append(Algebraic());
 		
 		return moveString.toString();
 	}
@@ -112,11 +110,10 @@ class Move implements Comparable<Move> {
 		moveString.append(MoveNumber());
 		if (madeBy == Resources.BLACK) {
 			moveString.append(". ... ");
-			moveString.append(Algebraic());
 		} else {
 			moveString.append(". ");
-			moveString.append(Algebraic());
 		}
+		moveString.append(Algebraic());
 		
 		return moveString.toString();
 	}

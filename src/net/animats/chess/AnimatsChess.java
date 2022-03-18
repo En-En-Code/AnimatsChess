@@ -39,8 +39,9 @@ class AnimatsChess {
 			userInterface = new XBoardInterface(engine);
 		else if (_arguments[0].equals("swing"))
 			userInterface = new SwingInterface(engine);
-		else 
-			System.out.println("unknown interface: " + _arguments[0]);
+		else
+			// Exit the program, as the uninitialized interface will cause problems
+			throw new IllegalArgumentException("unknown interface: " + _arguments[0]);
 
 		// Start the engine (creating its own thread of execution)
 		engine.start();

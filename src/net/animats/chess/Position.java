@@ -93,10 +93,7 @@ class Position {
 	}
 	
 	boolean IsLastDestination(int _rank, int _file) {
-		if (_rank == lastDestinationRank && _file == lastDestinationFile)
-			return true;
-		else
-			return false;
+		return (_rank == lastDestinationRank && _file == lastDestinationFile);
 	}
 
 	// Return the game state of this position.
@@ -414,7 +411,7 @@ class Position {
 					break;
 				case Piece.BISHOP:
 					squares[_move.newRank][_move.newFile] = new Bishop(_move.pieceMoved.colour);
-					totalMaterial[_move.pieceMoved.colour] += 200;
+					totalMaterial[_move.pieceMoved.colour] += 225;
 					break;
 				case Piece.ROOK:
 					squares[_move.newRank][_move.newFile] = new Rook(_move.pieceMoved.colour);
@@ -482,7 +479,7 @@ class Position {
 			if (squares[lastMove.newRank][lastMove.newFile] instanceof Knight)
 				totalMaterial[lastMove.pieceMoved.colour] -= 200;
 			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Bishop)
-				totalMaterial[lastMove.pieceMoved.colour] -= 200;
+				totalMaterial[lastMove.pieceMoved.colour] -= 225;
 			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Rook)
 				totalMaterial[lastMove.pieceMoved.colour] -= 400;
 			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Queen)
@@ -501,7 +498,7 @@ class Position {
 		
 		// Increase the opponents totalMaterial tally as the piece is replaced.
 		if (lastMove.pieceTaken != null) {
-			totalMaterial[lastMove.pieceTaken.colour] += lastMove.pieceTaken.value;		
+			totalMaterial[lastMove.pieceTaken.colour] += lastMove.pieceTaken.value;
 		}
 
 		// Reduce the pieces move count.
@@ -1026,7 +1023,7 @@ class Position {
 			icon += "bishop.png";
 			
 			// These are the standard moves a bishop can make. 
-		    	standardMoves = new PieceMove[4];
+		    standardMoves = new PieceMove[4];
 			standardMoves[0] = new PieceMove(-1, -1, true);
 			standardMoves[1] = new PieceMove(-1, 1, true);
 			standardMoves[2] = new PieceMove(1, -1, true);
@@ -1049,7 +1046,7 @@ class Position {
 			icon += "rook.png";
 			
 			// These are the standard moves a rook can make. 
-		    	standardMoves = new PieceMove[4];
+		    standardMoves = new PieceMove[4];
 			standardMoves[0] = new PieceMove(-1, 0, true);
 			standardMoves[1] = new PieceMove(1, 0, true);
 			standardMoves[2] = new PieceMove(0, -1, true);
@@ -1099,7 +1096,7 @@ class Position {
 			icon += "king.png";
 			
 			// These are the standard moves a king can make. 
-		    	standardMoves = new PieceMove[8];
+		    standardMoves = new PieceMove[8];
 			standardMoves[0] = new PieceMove(-1, -1, false);
 			standardMoves[1] = new PieceMove(-1, 0, false);
 			standardMoves[2] = new PieceMove(-1, 1, false);

@@ -79,8 +79,13 @@ public class SwingInterface extends JFrame implements IOInterface {
 	}
 
 	public void Start() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setVisible(true);
+	}
+	
+	public void Close() {
+		engine.Quit();
+		SwingInterface.this.dispose();
 	}
 
 	public void Finished(double _timeTaken, int _movesCalculated, Move _move, int _nodesPerSecond) {
@@ -232,10 +237,16 @@ public class SwingInterface extends JFrame implements IOInterface {
 		quitItem.addActionListener(new
 			ActionListener() {
 				public void actionPerformed(ActionEvent _event) {
-					engine.Quit();
-					// What is the correct way to close the Swing interface???
+					SwingInterface.this.Close();
 				}
 			});
+		// Makes sure the engine thread terminates on program close
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				SwingInterface.this.Close();
+			}
+		});
+		
 		//Add the options menu.
 		JMenu optionsMenu = new JMenu("Options");
 		menuBar.add(optionsMenu);

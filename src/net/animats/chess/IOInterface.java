@@ -41,7 +41,7 @@ interface IOInterface {
 
 	/** 
 	 * This method is called when the board has changed and
-	 * the display needs to be updated to relfect the change.
+	 * the display needs to be updated to reflect the change.
 	 * It takes a single parameter that is a reference to a
 	 * <code>Move</code> object representing the move that
 	 * was made.

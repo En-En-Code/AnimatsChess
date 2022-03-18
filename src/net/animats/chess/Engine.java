@@ -80,15 +80,18 @@ class Engine extends Thread {
 	}
 
 	public void Quit() {
-		interrupted = true;
-		exiting = true;
+		synchronized (engineLock) {
+			interrupted = true;
+			exiting = true;
+			engineLock.notifyAll();
+		}
 	}
 	
 	// Called when the superclass 'Thread' has its start() method invoked.
     public void run() {
 		try {
 			synchronized (engineLock) {
-				while (theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal() && exiting == false) {
+				while (theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal() && !exiting) {
 					if (thinking) {
 						double timeTaken = Analyse();
 
@@ -308,12 +311,11 @@ class Engine extends Thread {
 		Move move = _firstMove;
 		
 		do {
+			principalVariation.append(" ");
 			if (move.madeBy == Resources.WHITE) {
-				principalVariation.append(" ");
 				principalVariation.append(Integer.toString(move.MoveNumber()));
 				principalVariation.append(". ");
-			} else
-				principalVariation.append(" ");
+			}
 			
 			principalVariation.append(move.Algebraic());
 			
@@ -333,7 +335,12 @@ class Engine extends Thread {
 	 */
 	private void SortMoves() {
 		if (immediateMoves != null) {
-			Collections.sort(immediateMoves);
+			if (theBoard.getWhoseTurn() == Resources.BLACK)
+				Collections.sort(immediateMoves);
+			else
+				// For the white player, higher evaluations are better so sort the list
+				// in a highest to lowest sort order.
+				Collections.sort(immediateMoves, Collections.reverseOrder());
 			
 			if (debug == VERBOSE) {
 				System.out.println("----------------------------");
@@ -343,13 +350,8 @@ class Engine extends Thread {
 				
 				System.out.println("----------------------------");
 			}
-			// For the white player, higher evaluations are better so reverse the list resulting
-			// in a highest to lowest sort order.
-			if (theBoard.getWhoseTurn() == Resources.WHITE)
-				Collections.reverse(immediateMoves);
 		} else
 			System.out.println("no immediate moves to sort");
-
 	}
 		
 	// This method returns true if the supplied move can be legally made from the current position.
