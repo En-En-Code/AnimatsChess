@@ -34,7 +34,6 @@ class XBoardInterface implements IOInterface {
 
 	public void Finished(double _timeTaken, int _movesCalculated, Move _move, int _nodesPerSecond) {
 		thinking = false;
-		System.out.println("move " + _move.AsCommand());
 	}
 
 	public XBoardInterface (Engine _engine) {
@@ -62,6 +61,7 @@ class XBoardInterface implements IOInterface {
 					System.out.println("feature reuse=0 sigint=0 sigterm=0 draw=0 myname=\"Animats\" done=1");
 				}
 			} else {
+				engine.Quit();
 				exiting = true;
 			}
 
@@ -89,7 +89,14 @@ class XBoardInterface implements IOInterface {
 						engine.random = false;
 					} else if (inputLine.equals("random")) {
 						engine.random = true;
-					} else if (thinking == true || engine.theBoard.getGameState().ordinal() > Move.GameState.UNKNOWN.ordinal()) {
+					} else if (inputLine.equals("undo")) {
+						theBoard.UndoMove();
+						engine.DetermineImmediateMoves();
+					} else if (inputLine.equals("remove")) {
+						theBoard.UndoMove();
+						theBoard.UndoMove();
+						engine.DetermineImmediateMoves();
+					} if (thinking == true || engine.theBoard.getGameState().ordinal() > Move.GameState.UNKNOWN.ordinal()) {
 					// NO COMMAND AFTER THIS LINE CAN BE PERFORMED WHILE THE ENGINE IS THINKING
 					} else if (inputLine.equals("go")) {
 						// Set the engine to start playing for the player whose turn it is.
@@ -100,6 +107,15 @@ class XBoardInterface implements IOInterface {
 							AnimatsChess.player[Resources.BLACK].computer = true;
 							AnimatsChess.player[Resources.WHITE].computer = false;
 						}
+					} else if (inputLine.equals("hint")) {					
+						// This flag is set to indicate that the engine has started thinking.
+						// Other commands can now be issued while the engine is thinking without
+						// triggering the thinking process to start again.
+						thinking = true;
+						
+						// Pass 'true' to indicated that the move should not be made
+						// after analysis is complete
+						engine.StartThinking(true);
 					} else if (inputLine.equals("white")) {
 						engine.theBoard.setWhoseTurn(Resources.WHITE);
 						AnimatsChess.player[Resources.BLACK].computer = true;
@@ -108,8 +124,11 @@ class XBoardInterface implements IOInterface {
 						engine.theBoard.setWhoseTurn(Resources.BLACK);
 						AnimatsChess.player[Resources.WHITE].computer = true;
 						AnimatsChess.player[Resources.BLACK].computer = false;
-					} else if (inputLine.equals("restart")) {
+					} else if (inputLine.equals("restart") || inputLine.equals("new")) {
 						engine.Reset();
+						// new sets the engine to be black according to the documentation
+						AnimatsChess.player[Resources.WHITE].computer = true;
+						AnimatsChess.player[Resources.BLACK].computer = false;
 					} else if (inputLine.equals("warranty")) {
 						System.out.println("This program is distributed in the hope that it will be useful,");
 						System.out.println("but WITHOUT ANY WARRANTY; without even the implied warranty of");
@@ -122,16 +141,10 @@ class XBoardInterface implements IOInterface {
 					} else if (engine.IsLegalMove(inputLine) != null)
 						engine.HumanMove(inputLine);
 				}
-			}
-
-			// Wake up the engine so it can exit too.
-			synchronized (engine.engineLock) {
-				engine.engineLock.notifyAll();
-			}
-		
+			}	
 		} catch ( IOException error ) {
-        		System.err.println( "error reading stdin: " + error );
-    		}
+    		System.err.println( "error reading stdin: " + error );
+		}
 	}
 	/**
 	 * This method is called when an informational text string
@@ -157,9 +170,11 @@ class XBoardInterface implements IOInterface {
 	 * state of the board.
 	 */
 	public void MoveMade(Move _move) {
+		System.out.println("move " + _move.AsCommand());
 	}
 
 	public void SuggestedMove(Move _move) {
+		System.out.println("Hint: " + _move.AsCommand());
 	}
 }
 

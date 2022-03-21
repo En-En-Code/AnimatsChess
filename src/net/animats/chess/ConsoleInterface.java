@@ -93,11 +93,12 @@ class ConsoleInterface implements IOInterface {
 							AnimatsChess.player[Resources.BLACK].computer = true;
 							AnimatsChess.player[Resources.WHITE].computer = false;
 						}
-					} else if (inputLine.equals("hint")) {
-						thinking = true;
+					} else if (inputLine.equals("hint")) {					
 						// This flag is set to indicate that the engine has started thinking.
-						// Other commands can now me issued while the engine is thinking without
+						// Other commands can now be issued while the engine is thinking without
 						// triggering the thinking process to start again.
+						thinking = true;
+						
 						System.out.println("\nanalysing position...");
 						// Pass 'true' to indicated that the move should not be made
 						// after analysis is complete
@@ -180,11 +181,6 @@ class ConsoleInterface implements IOInterface {
 		// Check if the last command typed has ended the game either by resigning or winning
 		// and keeping looping for more user input if the game is still active.
 		} while (engine.theBoard.getGameState().ordinal() < Move.GameState.EXITING.ordinal() && exiting == false);
-
-		// Wake the engine up so it can shutdown too.
-		synchronized (engine.engineLock) {
-			engine.engineLock.notifyAll();
-		}
 	}
 
 	/**
