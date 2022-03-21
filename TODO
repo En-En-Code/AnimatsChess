@@ -1,5 +1,4 @@
-Add promotion notation to SAN (DONE)
-Allow player to choose piece to promote to. (DONE)
 Make "quit" close the Swing Interface (DONE)
 Allow player to choose color to play with in swing.
-Have "Configure" do something eventually.
+Add more customizable parameters to engine; allow "Configure" to set them.
+Increase playing strength, mainly by reducing minor piece for pawn trades.

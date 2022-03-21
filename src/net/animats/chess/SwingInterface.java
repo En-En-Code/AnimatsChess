@@ -253,6 +253,13 @@ public class SwingInterface extends JFrame implements IOInterface {
 		
 		//Add the configure menu item.
 		JMenuItem configureItem = optionsMenu.add("Configure");
+		configureItem.addActionListener(new
+				ActionListener() {
+					public void actionPerformed(ActionEvent _event) {
+						ConfigureFrame configureFrame = new ConfigureFrame(SwingInterface.this, "Configure");
+						configureFrame.setVisible(true);
+					}
+				});
 		
 		JMenu helpMenu = new JMenu("Help");
 		menuBar.add(helpMenu);
@@ -271,8 +278,8 @@ public class SwingInterface extends JFrame implements IOInterface {
 				public void actionPerformed(ActionEvent _event) {
 					JOptionPane.showMessageDialog(SwingInterface.this,
 					"This program is distributed in the hope that it will be useful,\n" +
-    					"but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
-    					"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
+    				"but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
+    				"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
    					"GNU General Public License for more details.",
    					"Warranty", JOptionPane.PLAIN_MESSAGE);
 				}
@@ -284,14 +291,57 @@ public class SwingInterface extends JFrame implements IOInterface {
 				public void actionPerformed(ActionEvent _event) {
 					JOptionPane.showMessageDialog(SwingInterface.this,
 					"This program is free software; you can redistribute it and/or modify\n" +
-    					"it under the terms of the GNU General Public License as published by\n" +
-    					"the Free Software Foundation; either version 2 of the License, or\n" +
-    					"(at your option) any later version.",
+    				"it under the terms of the GNU General Public License as published by\n" +
+    				"the Free Software Foundation; either version 2 of the License, or\n" +
+    				"(at your option) any later version.",
    					"Copying", JOptionPane.PLAIN_MESSAGE);
 				}
 			});
 		
 		validate();
 		pack();
+	}
+	
+	private class ConfigureFrame extends JDialog {
+		private static final long serialVersionUID = 1;
+
+		private ConfigureFrame(Frame owner, String title) {
+			super(owner, title);
+			setLayout(new GridBagLayout());
+			
+			JLabel titleLabel = new JLabel("Engine Options");
+			titleLabel.setMinimumSize(new Dimension(200, 35));
+			GridBagConstraints titleConstraints = new GridBagConstraints();
+			titleConstraints.gridx = 0;
+			titleConstraints.gridy = 0;
+			titleConstraints.gridheight = 1;
+			titleConstraints.gridwidth = 1;
+			titleConstraints.weightx = 0;
+			titleConstraints.weighty = 0;
+			titleConstraints.insets = new Insets(2, 2, 4, 4);
+			add(titleLabel, titleConstraints);
+			
+			JCheckBox randomBox = new JCheckBox("Random", engine.random);
+			randomBox.setMnemonic(KeyEvent.VK_R);
+			randomBox.addItemListener(new
+				ItemListener() {
+					public void itemStateChanged(ItemEvent _event) {
+						engine.random = !engine.random;
+					}
+			});
+			GridBagConstraints randBoxConstraints = new GridBagConstraints();
+			randBoxConstraints.gridx = 0;
+			randBoxConstraints.gridy = 1;
+			randBoxConstraints.gridheight = 1;
+			randBoxConstraints.gridwidth = 1;
+			randBoxConstraints.weightx = 0;
+			randBoxConstraints.weighty = 0;
+			randBoxConstraints.insets = new Insets(2, 2, 4, 4);
+			add(randomBox, randBoxConstraints);
+			
+			validate();
+			pack();
+			setLocationRelativeTo(owner);
+		}
 	}
 }
