@@ -127,8 +127,8 @@ class XBoardInterface implements IOInterface {
 					} else if (inputLine.equals("restart") || inputLine.equals("new")) {
 						engine.Reset();
 						// new sets the engine to be black according to the documentation
-						AnimatsChess.player[Resources.WHITE].computer = true;
-						AnimatsChess.player[Resources.BLACK].computer = false;
+						AnimatsChess.player[Resources.WHITE].computer = false;
+						AnimatsChess.player[Resources.BLACK].computer = true;
 					} else if (inputLine.equals("warranty")) {
 						System.out.println("This program is distributed in the hope that it will be useful,");
 						System.out.println("but WITHOUT ANY WARRANTY; without even the implied warranty of");
