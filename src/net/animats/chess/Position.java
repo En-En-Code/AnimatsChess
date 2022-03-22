@@ -200,7 +200,10 @@ class Position {
 	}
 
 	// Below how many moves do we apply the evaluations for the opening phase of the game
-	static final int END_OF_OPENING = 10;
+	static final int END_OF_OPENING = 16;
+	
+	// Below after how many moves we apply the evaluations for the end phase of the game
+	static final int BEGIN_OF_ENDGAME = 70;
 	
 	// These are the constants used by the Position.Evaluate method as penalties.
 	static final int DOUBLED_PAWN = 25;
@@ -210,6 +213,8 @@ class Position {
 	// These are the constants used by the Position.Evaluate method as bonuses.
 	static final int CASTLED = 50;
 	static final int CENTRE_SQUARE_OCCUPIED = 50;
+	static final int BISHOP_PAIR = 25;
+	static final int ADVANCED_PAWN = 25;
 
 	/**
 	 * This method evaluates the Position and sets its evaluation field accordingly.
@@ -221,25 +226,41 @@ class Position {
 		
 		// These fields store the number of doubled and tripled pawns each colour has in this position.
 		int multiplePawns[] = { 0, 0 };
-		int minorPiecesNotMoved[] = { 0, 0 };
-
 		int pawnsInFile[][] = new int[2][8];
+		int pawnPressure[] = { 0, 0 };
+		
+		int minorPiecesNotMoved[] = { 0, 0 };
+		
+		// Represents whether each side has a bishop on each colour square
+		int bishops[][] = new int[2][2];
 
 		// Do a scan of the board and store a bit of information...
 		Piece currentPiece;
 		for (int file = 0; file < 8; file++) {
 			for (int rank = 0; rank < 8; rank++) {
 				currentPiece = squares[rank][file];	
-				if (currentPiece != null) {
-					// Count the number of pawns in each file.
+				if (currentPiece != null) {			
 					if (currentPiece instanceof Pawn) {
+						// Count the number of pawns in each file.
 						pawnsInFile[currentPiece.colour][file]++;
 						if (pawnsInFile[currentPiece.colour][file] > 1)
 							multiplePawns[currentPiece.colour]++;
+						
+						// Track how down the board the pawns are
+						if (rank < 4 && currentPiece.colour == Resources.BLACK)
+							pawnPressure[currentPiece.colour] += 4 - rank;
+						else if (rank >= 4 && currentPiece.colour == Resources.WHITE)
+							pawnPressure[currentPiece.colour] += rank - 3;
 					}
 					
 					// Count how many minor pieces each colour has that haven't moved.
-					if (currentPiece instanceof Bishop || currentPiece instanceof Knight) {
+					if (currentPiece instanceof Knight) {
+						if (currentPiece.moveCount == 0)
+							minorPiecesNotMoved[currentPiece.colour]++;
+					}
+					if (currentPiece instanceof Bishop) {
+						// track bishops and which colour they are on
+						bishops[currentPiece.colour][(file+rank) & 1] = 1;
 						if (currentPiece.moveCount == 0)
 							minorPiecesNotMoved[currentPiece.colour]++;
 					}
@@ -281,7 +302,7 @@ class Position {
 			// Modify the evaluation to reflect the appropriate bonuses.
 			
 			// Castling is a good thing...
-			if (castled[colour])
+			if (castled[colour] && scoreSheet.size() < BEGIN_OF_ENDGAME)
 				bonus = CASTLED;
 				
 			// Occupation of the centre squares is a good thing.
@@ -297,7 +318,17 @@ class Position {
 			if (squares[4][4] != null && squares[4][4].colour == colour) {
 				bonus += CENTRE_SQUARE_OCCUPIED;
 			}
-
+			
+			// The bishop pair is nice to have.
+			if (bishops[colour][0] == 1 && bishops[colour][1] == 1)
+				bonus += BISHOP_PAIR;
+			
+			// Pawns in enemy territory are quite strong
+			bonus += pawnPressure[colour] * ADVANCED_PAWN;
+			// Doubly so in the endgame
+			if (scoreSheet.size() >= BEGIN_OF_ENDGAME)
+				bonus += pawnPressure[colour] * ADVANCED_PAWN;
+			
 			// The direction the evaluation should move (+ or -) is 
 			bonus *= bonusModifier[colour];
 			evaluation += bonus;
