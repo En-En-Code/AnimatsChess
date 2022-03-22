@@ -54,7 +54,7 @@ class Engine extends Thread {
 
 	// This is set to TRUE if the engine is only providing a hint, 
     // not making a move.
-	private boolean analysis_only = false;
+	public boolean analysis_only = false;
 
 	Object engineLock = new Object();
 

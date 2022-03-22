@@ -34,6 +34,8 @@ class XBoardInterface implements IOInterface {
 
 	public void Finished(double _timeTaken, int _movesCalculated, Move _move, int _nodesPerSecond) {
 		thinking = false;
+		if (!engine.analysis_only)
+			System.out.println("move " + _move.AsCommand());
 	}
 
 	public XBoardInterface (Engine _engine) {
@@ -170,7 +172,6 @@ class XBoardInterface implements IOInterface {
 	 * state of the board.
 	 */
 	public void MoveMade(Move _move) {
-		System.out.println("move " + _move.AsCommand());
 	}
 
 	public void SuggestedMove(Move _move) {
