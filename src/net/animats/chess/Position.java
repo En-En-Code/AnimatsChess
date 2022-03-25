@@ -209,12 +209,14 @@ class Position {
 	static final int DOUBLED_PAWN = 25;
 	static final int ISOLATED_PAWN = 25;
 	static final int MINOR_PIECE_NOT_MOVED = 25;
+	static final int KNIGHT_ON_EDGE = 25;
 
 	// These are the constants used by the Position.Evaluate method as bonuses.
 	static final int CASTLED = 50;
 	static final int CENTRE_SQUARE_OCCUPIED = 50;
-	static final int BISHOP_PAIR = 25;
-	static final int ADVANCED_PAWN = 25;
+	static final int BISHOP_PAIR = 50;
+	static final int ADVANCED_PAWN = 50;
+	static final int ROOK_ON_OPEN_FILE = 25;
 
 	/**
 	 * This method evaluates the Position and sets its evaluation field accordingly.
@@ -229,7 +231,10 @@ class Position {
 		int pawnsInFile[][] = new int[2][8];
 		int pawnPressure[] = { 0, 0 };
 		
+		int rooksOnFile[][] = new int[2][8];
+		
 		int minorPiecesNotMoved[] = { 0, 0 };
+		int knightsOnEdge[] = { 0, 0 };
 		
 		// Represents whether each side has a bishop on each colour square
 		int bishops[][] = new int[2][2];
@@ -251,18 +256,19 @@ class Position {
 							pawnPressure[currentPiece.colour] += 4 - rank;
 						else if (rank >= 4 && currentPiece.colour == Resources.WHITE)
 							pawnPressure[currentPiece.colour] += rank - 3;
-					}
-					
-					// Count how many minor pieces each colour has that haven't moved.
-					if (currentPiece instanceof Knight) {
+					} else if (currentPiece instanceof Knight) {
+						// track knights on the edge of the board
+						if (file == 0 || file == 7 || rank == 0 || rank == 7)
+							knightsOnEdge[currentPiece.colour]++;
 						if (currentPiece.moveCount == 0)
 							minorPiecesNotMoved[currentPiece.colour]++;
-					}
-					if (currentPiece instanceof Bishop) {
+					} else if (currentPiece instanceof Bishop) {
 						// track bishops and which colour they are on
 						bishops[currentPiece.colour][(file+rank) & 1] = 1;
 						if (currentPiece.moveCount == 0)
 							minorPiecesNotMoved[currentPiece.colour]++;
+					} else if (currentPiece instanceof Rook) {
+						rooksOnFile[currentPiece.colour][file]++;
 					}
 				}
 			}
@@ -285,8 +291,14 @@ class Position {
 						// This file has at least one isolated pawn.
 						penalty += ISOLATED_PAWN;
 					}
-				}		
+				} else if (rooksOnFile[colour][file] != 0) {
+					// bonus for having a rook on an open file
+					bonus += rooksOnFile[colour][file] * ROOK_ON_OPEN_FILE;
+				}
 			}
+			
+			// If a player has knights on the edge of the board, apply a penalty.
+			penalty += knightsOnEdge[colour] * KNIGHT_ON_EDGE;
 				
 			// If a player hasn't moved each of their pieces by the end of the opening, apply a penalty.
 			if (scoreSheet.size() < END_OF_OPENING) 
@@ -295,12 +307,7 @@ class Position {
 			if (castled[colour] == false && squares[kingRank[colour]][kingFile[colour]].moveCount != 0)
 				penalty += CASTLED;
 			
-			// The direction the evaluation should move (+ or -) is 
-			penalty *= penaltyModifier[colour];
-			evaluation += penalty;
-
 			// Modify the evaluation to reflect the appropriate bonuses.
-			
 			// Castling is a good thing...
 			if (castled[colour] && scoreSheet.size() < BEGIN_OF_ENDGAME)
 				bonus = CASTLED;
@@ -323,12 +330,14 @@ class Position {
 			if (bishops[colour][0] == 1 && bishops[colour][1] == 1)
 				bonus += BISHOP_PAIR;
 			
-			// Pawns in enemy territory are quite strong
-			bonus += pawnPressure[colour] * ADVANCED_PAWN;
-			// Doubly so in the endgame
+			// Pawns in enemy territory are quite strong, but only in endgames
+			// when it is much more likely they will threaten promotion
 			if (scoreSheet.size() >= BEGIN_OF_ENDGAME)
 				bonus += pawnPressure[colour] * ADVANCED_PAWN;
 			
+			// The direction the evaluation should move (+ or -) is 
+			penalty *= penaltyModifier[colour];
+			evaluation += penalty;
 			// The direction the evaluation should move (+ or -) is 
 			bonus *= bonusModifier[colour];
 			evaluation += bonus;
