@@ -54,7 +54,7 @@ class Engine extends Thread {
 
 	// This is set to TRUE if the engine is only providing a hint, 
     // not making a move.
-	private boolean analysis_only = false;
+	public boolean analysis_only = false;
 
 	Object engineLock = new Object();
 
@@ -201,17 +201,90 @@ class Engine extends Thread {
 	// This function builds a tree of legal moves to the depth of the specified ply. It returns the
 	// position evaluations on its way back down the tree after constructing it.
 	private SearchResult BuildTree(int _ply, int _alpha, int _beta) {
+		if (theBoard.getWhoseTurn() == Resources.WHITE)
+			return BuildTreeWhite(_ply, _alpha, _beta);
+		else
+			return BuildTreeBlack(_ply, _alpha, _beta);			
+	}
+	
+	private SearchResult BuildTreeWhite(int _ply, int _alpha, int _beta) {
 		// If the interface is exiting, stop thinking.
 		if (interrupted)
 			return new SearchResult(0, 0);
-
-		if (theBoard.getGameState() == Move.GameState.BLACK_CHECKMATED) 
-			return new SearchResult(+Resources.INFINITY, 0);
+		
+		// Since White being stalemated/checkmated can only happen as the result
+		// of Black's move, we only check for those game-ending states here
 		if (theBoard.getGameState() == Move.GameState.WHITE_CHECKMATED)
 			return new SearchResult(-Resources.INFINITY, 0);
-		if (theBoard.getGameState() == Move.GameState.WHITE_STALEMATED || theBoard.getGameState() == Move.GameState.BLACK_STALEMATED)
+		if (theBoard.getGameState() == Move.GameState.WHITE_STALEMATED)
 			return new SearchResult(0, 0);
+		
+		if ((_ply < 1 && ((Move) theBoard.getScoreSheet().peek()).pieceTaken == null) || _ply <= (requestedDepth - maxSearchDepth)) {
+			// This is a leaf node and the last move didn't involve a take so set the evaluation to 
+			// the figure arrived at by the Evaluate function.
+			return new SearchResult(theBoard.Evaluate(), 0);
+		}
+		
+		// This is not a leaf node, so loop through all the possible moves from this position.
+		_ply--;
+		
+		ArrayList<Move> legalMoves;
 
+		if (_ply == requestedDepth - 1)
+			legalMoves = immediateMoves;
+		else
+			legalMoves = theBoard.DetermineLegalMoves();
+
+		movesCalculated += legalMoves.size();
+		rootMoveTotal += legalMoves.size();
+		
+		SearchResult result = new SearchResult(_alpha, 0);
+		for (Move move : legalMoves) {
+			if (_ply == requestedDepth - 1) rootMoveTotal = 0;
+			theBoard.MakeMove(move);
+			move.result = BuildTreeBlack(_ply, _alpha, _beta);
+
+			if (move.result.evaluation > _alpha) {
+				// This is a new best move.
+				_alpha = move.result.evaluation;
+				result.evaluation = _alpha;
+				result.searchDepth = move.result.searchDepth + 1;
+				result.leadsTo = move;
+				
+				if (_ply == requestedDepth - 1 && debug != 0) {
+					// This is the top level, so make this the new best move the 
+					// player can make so far.
+					double endTime = (double) System.currentTimeMillis();
+					endTime -= startTime;
+					AnimatsChess.userInterface.Thinking(result.searchDepth, _alpha, endTime , rootMoveTotal, Thinking(move));
+				}
+			} else if (_ply == requestedDepth - 1 && debug == NORMAL) {
+				double endTime = (double) System.currentTimeMillis();
+				endTime -= startTime;
+				AnimatsChess.userInterface.Thinking(result.searchDepth, move.result.evaluation, endTime , rootMoveTotal, Thinking(move));
+			}
+			
+			theBoard.UndoMove();
+			
+			if (_alpha >= _beta) 
+				break;
+		}
+		
+		return result;
+	}
+	
+	private SearchResult BuildTreeBlack(int _ply, int _alpha, int _beta) {
+		// If the interface is exiting, stop thinking.
+		if (interrupted)
+			return new SearchResult(0, 0);
+		
+		// Since Black being stalemated/checkmated can only happen as the result
+		// of White move, we only check for those game-ending states here
+		if (theBoard.getGameState() == Move.GameState.BLACK_CHECKMATED) 
+			return new SearchResult(+Resources.INFINITY, 0);
+		if (theBoard.getGameState() == Move.GameState.BLACK_STALEMATED)
+			return new SearchResult(0, 0);
+		
 		if ((_ply < 1 && ((Move) theBoard.getScoreSheet().peek()).pieceTaken == null) || _ply <= (requestedDepth - maxSearchDepth)) {
 			// This is a leaf node and the last move didn't involve a take so set the evaluation to 
 			// the figure arrived at by the Evaluate function.
@@ -231,75 +304,39 @@ class Engine extends Thread {
 		movesCalculated += legalMoves.size();
 		rootMoveTotal += legalMoves.size();
 		
-		SearchResult result = null;
+		SearchResult result = new SearchResult(_beta, 0);
+		for (Move move : legalMoves) {
+			if (_ply == requestedDepth - 1) rootMoveTotal = 0;
+			theBoard.MakeMove(move);
+			move.result = BuildTreeWhite(_ply, _alpha, _beta);
 
-		if (theBoard.getWhoseTurn() == Resources.WHITE) {
-			result = new SearchResult(_alpha, 0);
-			for (Move move : legalMoves) {
-				if (_ply == requestedDepth - 1) rootMoveTotal = 0;
-				theBoard.MakeMove(move);
-				move.result = BuildTree(_ply, _alpha, _beta);
+			if (move.result.evaluation < _beta) {
+				// This is a new best move.
+				_beta = move.result.evaluation;
+				result.evaluation = _beta;
+				result.searchDepth = move.result.searchDepth + 1;
+				result.leadsTo = move;
 
-				if (move.result.evaluation > _alpha) {
-					// This is a new best move.
-					_alpha = move.result.evaluation;
-					result.evaluation = _alpha;
-					result.searchDepth = move.result.searchDepth + 1;
-					result.leadsTo = move;
-					
-					if (_ply == requestedDepth - 1 && debug != 0) {
-						// This is the top level, so make this the new best move the 
-						// player can make so far.
-						double endTime = (double) System.currentTimeMillis();
-						endTime -= startTime;
-						AnimatsChess.userInterface.Thinking(result.searchDepth, _alpha, endTime , rootMoveTotal, Thinking(move));
-					}
-				} else if (_ply == requestedDepth - 1 && debug == NORMAL) {
+				if (_ply == requestedDepth - 1 && debug != 0) {
+					// This is the top level, so make this the new best move the 
+					// player can make so far.
 					double endTime = (double) System.currentTimeMillis();
 					endTime -= startTime;
-					AnimatsChess.userInterface.Thinking(result.searchDepth, move.result.evaluation, endTime , rootMoveTotal, Thinking(move));
+					AnimatsChess.userInterface.Thinking(result.searchDepth, _beta, endTime , rootMoveTotal, Thinking(move));
 				}
-				
-				theBoard.UndoMove();
-				
-				if (_alpha >= _beta) 
-					break;
+
+			} else if (_ply == requestedDepth - 1 && debug == NORMAL) {
+				double endTime = (double) System.currentTimeMillis();
+				endTime -= startTime;
+				AnimatsChess.userInterface.Thinking(result.searchDepth, move.result.evaluation, endTime , rootMoveTotal, Thinking(move));
 			}
-			return result;
-		} else {
-			result = new SearchResult(_beta, 0);
-			for (Move move : legalMoves) {
-				if (_ply == requestedDepth - 1) rootMoveTotal = 0;
-				theBoard.MakeMove(move);
-				move.result = BuildTree(_ply, _alpha, _beta);
-
-				if (move.result.evaluation < _beta) {
-					// This is a new best move.
-					_beta = move.result.evaluation;
-					result.evaluation = _beta;
-					result.searchDepth = move.result.searchDepth + 1;
-					result.leadsTo = move;
-
-					if (_ply == requestedDepth - 1 && debug != 0) {
-						// This is the top level, so make this the new best move the 
-						// player can make so far.
-						double endTime = (double) System.currentTimeMillis();
-						endTime -= startTime;
-						AnimatsChess.userInterface.Thinking(result.searchDepth, _beta, endTime , rootMoveTotal, Thinking(move));
-					}
-
-				} else if (_ply == requestedDepth - 1 && debug == NORMAL) {
-					double endTime = (double) System.currentTimeMillis();
-					endTime -= startTime;
-					AnimatsChess.userInterface.Thinking(result.searchDepth, move.result.evaluation, endTime , rootMoveTotal, Thinking(move));
-				}
-				
-				theBoard.UndoMove();
-				if (_alpha >= _beta)
-					break;
-			}
-			return result;
+			
+			theBoard.UndoMove();
+			if (_alpha >= _beta)
+				break;
 		}
+		
+		return result;
 	}
 
 	private String Thinking(Move _firstMove) {
