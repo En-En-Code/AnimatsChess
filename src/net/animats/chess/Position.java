@@ -53,9 +53,41 @@ class Position {
 	public int kingRank[] = new int[2];
 	public int kingFile[] = new int[2];
 
+	/** POSITIONAL EVALUATION TERMS */
 	// Store the total value of each player's pieces for each given position 
     // to allow the position to be evaluated.
 	int totalMaterial[] = new int[2];
+	
+	// Below how many moves do we apply the evaluations for the opening phase of the game
+	private	static final int END_OF_OPENING = 16;
+	
+	// Below after how many moves we apply the evaluations for the end phase of the game
+	private	static final int BEGIN_OF_ENDGAME = 70;
+	
+	// These are the constants used by the Position.Evaluate method as penalties.
+	private	static final int DOUBLED_PAWN = 25;
+	private	static final int ISOLATED_PAWN = 25;
+	private	static final int MINOR_PIECE_NOT_MOVED = 25;
+	private	static final int KNIGHT_ON_EDGE = 25;
+	private static final int FPAWN_MOVED_EARLY = 25;
+
+	// These are the constants used by the Position.Evaluate method as bonuses.
+	private	static final int CASTLED = 50;
+	private	static final int CENTRE_SQUARE_OCCUPIED = 50;
+	private	static final int BISHOP_PAIR = 50;
+	private	static final int ADVANCED_PAWN = 50;
+	private	static final int ROOK_ON_OPEN_FILE = 25;
+	
+	/** POSITIONAL EVALUATION STORAGE */
+	private int multiplePawns[] = { 0, 0 };
+	private	int pawnsInFile[][] = new int[2][8];
+	private int pawnPressure[] = { 0, 0 };
+	
+	private	int rooksOnFile[][] = new int[2][8];
+	
+	private	int minorPiecesNotMoved[] = { 0, 0 };
+	private	int knightsOnEdge[] = { 0, 0 };
+	int bishops[][] = new int[2][2];
 	
 	// This modifier is used to multiply any penalties to make them push the 
     // evaluation in the right direction: up for black (to white's advantage), 
@@ -178,8 +210,8 @@ class Position {
 
 		// Loop through all the moves looking for ambiguous references.
 		for (Move currentMove : legalMoves) {
-			if (!(currentMove.pieceMoved instanceof King) && 
-				!(currentMove.pieceMoved instanceof Pawn)) {
+			if (!(currentMove.pieceMoved.type == Piece.KING) && 
+				!(currentMove.pieceMoved.type == Piece.PAWN)) {
 				for (Move innerMove : legalMoves) {
 					if (innerMove != currentMove &&
 						innerMove.newRank == currentMove.newRank &&
@@ -199,25 +231,6 @@ class Position {
 		return legalMoves;
 	}
 
-	// Below how many moves do we apply the evaluations for the opening phase of the game
-	static final int END_OF_OPENING = 16;
-	
-	// Below after how many moves we apply the evaluations for the end phase of the game
-	static final int BEGIN_OF_ENDGAME = 70;
-	
-	// These are the constants used by the Position.Evaluate method as penalties.
-	static final int DOUBLED_PAWN = 25;
-	static final int ISOLATED_PAWN = 25;
-	static final int MINOR_PIECE_NOT_MOVED = 25;
-	static final int KNIGHT_ON_EDGE = 25;
-
-	// These are the constants used by the Position.Evaluate method as bonuses.
-	static final int CASTLED = 50;
-	static final int CENTRE_SQUARE_OCCUPIED = 50;
-	static final int BISHOP_PAIR = 50;
-	static final int ADVANCED_PAWN = 50;
-	static final int ROOK_ON_OPEN_FILE = 25;
-
 	/**
 	 * This method evaluates the Position and sets its evaluation field accordingly.
 	 */
@@ -226,55 +239,57 @@ class Position {
 		// Start by setting the evaluation to the difference in material.
 		int evaluation = totalMaterial[Resources.WHITE] - totalMaterial[Resources.BLACK];
 		
-		// These fields store the number of doubled and tripled pawns each colour has in this position.
-		int multiplePawns[] = { 0, 0 };
-		int pawnsInFile[][] = new int[2][8];
-		int pawnPressure[] = { 0, 0 };
+		// Reset all of the global evaluation terms
+		Arrays.fill(multiplePawns, 0);
+		Arrays.fill(pawnPressure, 0);
+		Arrays.fill(minorPiecesNotMoved, 0);
+		Arrays.fill(knightsOnEdge, 0);
+		for (int i = 0 ; i < 2; i++) {
+			Arrays.fill(pawnsInFile[i], 0);
+			Arrays.fill(rooksOnFile[i], 0);
+			Arrays.fill(bishops[i], 0);
+		}
 		
-		int rooksOnFile[][] = new int[2][8];
-		
-		int minorPiecesNotMoved[] = { 0, 0 };
-		int knightsOnEdge[] = { 0, 0 };
-		
-		// Represents whether each side has a bishop on each colour square
-		int bishops[][] = new int[2][2];
-
 		// Do a scan of the board and store a bit of information...
 		Piece currentPiece;
 		for (int file = 0; file < 8; file++) {
 			for (int rank = 0; rank < 8; rank++) {
 				currentPiece = squares[rank][file];	
-				if (currentPiece != null) {			
-					if (currentPiece instanceof Pawn) {
-						// Count the number of pawns in each file.
-						pawnsInFile[currentPiece.colour][file]++;
-						if (pawnsInFile[currentPiece.colour][file] > 1)
-							multiplePawns[currentPiece.colour]++;
-						
-						// Track how down the board the pawns are
-						if (rank < 4 && currentPiece.colour == Resources.BLACK)
-							pawnPressure[currentPiece.colour] += 4 - rank;
-						else if (rank >= 4 && currentPiece.colour == Resources.WHITE)
-							pawnPressure[currentPiece.colour] += rank - 3;
-					} else if (currentPiece instanceof Knight) {
-						// track knights on the edge of the board
-						if (file == 0 || file == 7 || rank == 0 || rank == 7)
-							knightsOnEdge[currentPiece.colour]++;
-						if (currentPiece.moveCount == 0)
-							minorPiecesNotMoved[currentPiece.colour]++;
-					} else if (currentPiece instanceof Bishop) {
-						// track bishops and which colour they are on
-						bishops[currentPiece.colour][(file+rank) & 1] = 1;
-						if (currentPiece.moveCount == 0)
-							minorPiecesNotMoved[currentPiece.colour]++;
-					} else if (currentPiece instanceof Rook) {
-						rooksOnFile[currentPiece.colour][file]++;
+				if (currentPiece != null) {
+					switch (currentPiece.type) {
+						case Piece.PAWN:
+							// Count the number of pawns in each file.
+							pawnsInFile[currentPiece.colour][file]++;
+							if (pawnsInFile[currentPiece.colour][file] > 1)
+								multiplePawns[currentPiece.colour]++;
+							
+							// Track how down the board the pawns are
+							if (rank < 4 && currentPiece.colour == Resources.BLACK)
+								pawnPressure[currentPiece.colour] += 4 - rank;
+							else if (rank >= 4 && currentPiece.colour == Resources.WHITE)
+								pawnPressure[currentPiece.colour] += rank - 3;
+							break;
+						case Piece.KNIGHT:
+							// track knights on the edge of the board
+							if (file == 0 || file == 7 || rank == 0 || rank == 7)
+								knightsOnEdge[currentPiece.colour]++;
+							if (currentPiece.moveCount == 0)
+								minorPiecesNotMoved[currentPiece.colour]++;
+							break;
+						case Piece.BISHOP:
+							// track bishops and which colour they are on
+							bishops[currentPiece.colour][(file+rank) & 1] = 1;
+							if (currentPiece.moveCount == 0)
+								minorPiecesNotMoved[currentPiece.colour]++;
+							break;
+						case Piece.ROOK:
+							rooksOnFile[currentPiece.colour][file]++;
 					}
 				}
 			}
 		}
 		
-		// Modify the evaluation to reflected the appropriate penalties.
+		// Modify the evaluation to reflected the appropriate penalties and bonuses
 		int penalty = 0;
 		int bonus = 0;
 		
@@ -299,19 +314,28 @@ class Position {
 			
 			// If a player has knights on the edge of the board, apply a penalty.
 			penalty += knightsOnEdge[colour] * KNIGHT_ON_EDGE;
-				
-			// If a player hasn't moved each of their pieces by the end of the opening, apply a penalty.
-			if (scoreSheet.size() < END_OF_OPENING) 
-				penalty += minorPiecesNotMoved[colour] * MINOR_PIECE_NOT_MOVED;
-
-			if (castled[colour] == false && squares[kingRank[colour]][kingFile[colour]].moveCount != 0)
-				penalty += CASTLED;
 			
-			// Modify the evaluation to reflect the appropriate bonuses.
-			// Castling is a good thing...
-			if (castled[colour] && scoreSheet.size() < BEGIN_OF_ENDGAME)
-				bonus = CASTLED;
-				
+			// If a player hasn't moved each of their pieces by the end of the opening, apply a penalty.
+			if (scoreSheet.size() < END_OF_OPENING) {
+				penalty += minorPiecesNotMoved[colour] * MINOR_PIECE_NOT_MOVED;
+				// Moving the f-pawn in the opening is weakening the structure
+				// Stop playing the Latvian, you fool!
+				if (squares[5][6 - 5*colour] == null || !(squares[5][6 - 5*colour].type == Piece.PAWN))
+					penalty += FPAWN_MOVED_EARLY;
+			}
+			if (scoreSheet.size() >= BEGIN_OF_ENDGAME) {
+				// Pawns in enemy territory are quite strong, but only in endgames
+				// when it is much more likely they will threaten promotion
+				bonus += pawnPressure[colour] * ADVANCED_PAWN;
+			} else {
+				// Castling is a good thing...
+				if (castled[colour])
+					bonus += CASTLED;
+				else if (squares[kingRank[colour]][kingFile[colour]].moveCount != 0)
+					// Big penalty for if the king has moved without castling
+					penalty += CASTLED;
+			}
+			
 			// Occupation of the centre squares is a good thing.
 			if (squares[3][3] != null && squares[3][3].colour == colour) {
 				bonus += CENTRE_SQUARE_OCCUPIED;
@@ -329,11 +353,6 @@ class Position {
 			// The bishop pair is nice to have.
 			if (bishops[colour][0] == 1 && bishops[colour][1] == 1)
 				bonus += BISHOP_PAIR;
-			
-			// Pawns in enemy territory are quite strong, but only in endgames
-			// when it is much more likely they will threaten promotion
-			if (scoreSheet.size() >= BEGIN_OF_ENDGAME)
-				bonus += pawnPressure[colour] * ADVANCED_PAWN;
 			
 			// The direction the evaluation should move (+ or -) is 
 			penalty *= penaltyModifier[colour];
@@ -408,7 +427,7 @@ class Position {
 					squares[rank][file] = new Pawn(currentColour);
 				
 				// Increase the total value of the pieces for each player
-				if (squares[rank][file] != null && !(squares[rank][file] instanceof King))
+				if (squares[rank][file] != null && !(squares[rank][file].type == Piece.KING))
 					totalMaterial[currentColour] += squares[rank][file].value;
 			}
 		}
@@ -419,7 +438,7 @@ class Position {
 		scoreSheet.push(_move);
 
 		// If the piece being moved is the king, update the cached location.
-		if (_move.pieceMoved instanceof King) {
+		if (_move.pieceMoved.type == Piece.KING) {
 			kingRank[_move.pieceMoved.colour] = _move.newRank;
 			kingFile[_move.pieceMoved.colour] = _move.newFile;
 		}
@@ -443,8 +462,12 @@ class Position {
 		}
 
 		// Promote the pawn if required and increase the moving player's material.
-		if (_move.pieceMoved instanceof Pawn && (_move.newRank == 0 || _move.newRank == 7)) {
+		if (_move.pieceMoved.type == Piece.PAWN && (_move.newRank == 0 || _move.newRank == 7)) {
 			switch (_move.promotionPiece) {
+				case Piece.QUEEN:
+					squares[_move.newRank][_move.newFile] = new Queen(_move.pieceMoved.colour);
+					totalMaterial[_move.pieceMoved.colour] += 800;
+					break;
 				case Piece.KNIGHT:
 					squares[_move.newRank][_move.newFile] = new Knight(_move.pieceMoved.colour);
 					totalMaterial[_move.pieceMoved.colour] += 200;
@@ -456,10 +479,6 @@ class Position {
 				case Piece.ROOK:
 					squares[_move.newRank][_move.newFile] = new Rook(_move.pieceMoved.colour);
 					totalMaterial[_move.pieceMoved.colour] += 400;
-					break;
-				case Piece.QUEEN:
-					squares[_move.newRank][_move.newFile] = new Queen(_move.pieceMoved.colour);
-					totalMaterial[_move.pieceMoved.colour] += 800;
 					break;
 			}
 		} else {
@@ -496,7 +515,7 @@ class Position {
 		Move lastMove = scoreSheet.pop();
 		
 		// If the piece that was moved is the king, update the cached location.
-		if (lastMove.pieceMoved instanceof King) {
+		if (lastMove.pieceMoved.type == Piece.KING) {
 			kingRank[lastMove.pieceMoved.colour] = lastMove.oldRank;
 			kingFile[lastMove.pieceMoved.colour] = lastMove.oldFile;
 		}
@@ -515,15 +534,15 @@ class Position {
 		}
 		
 		// Demote the pawn if required and decrease the moving players material.
-		if (lastMove.pieceMoved instanceof Pawn && (lastMove.newRank == 0 || lastMove.newRank == 7)) {
-			if (squares[lastMove.newRank][lastMove.newFile] instanceof Knight)
-				totalMaterial[lastMove.pieceMoved.colour] -= 200;
-			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Bishop)
-				totalMaterial[lastMove.pieceMoved.colour] -= 225;
-			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Rook)
-				totalMaterial[lastMove.pieceMoved.colour] -= 400;
-			else if (squares[lastMove.newRank][lastMove.newFile] instanceof Queen)
+		if (lastMove.pieceMoved.type == Piece.PAWN && (lastMove.newRank == 0 || lastMove.newRank == 7)) {
+			if (squares[lastMove.newRank][lastMove.newFile].type == Piece.QUEEN)
 				totalMaterial[lastMove.pieceMoved.colour] -= 800;
+			else if (squares[lastMove.newRank][lastMove.newFile].type == Piece.KNIGHT)
+				totalMaterial[lastMove.pieceMoved.colour] -= 200;
+			else if (squares[lastMove.newRank][lastMove.newFile].type == Piece.BISHOP)
+				totalMaterial[lastMove.pieceMoved.colour] -= 225;
+			else if (squares[lastMove.newRank][lastMove.newFile].type == Piece.ROOK)
+				totalMaterial[lastMove.pieceMoved.colour] -= 400;
 		} 
 
 		// Move the piece from its old square to the new square.
@@ -562,7 +581,7 @@ class Position {
 		// Skeleton code from the make move method...
 		
 		// If the piece being moved is the king, update the cached location.
-		if (_move.pieceMoved instanceof King) {
+		if (_move.pieceMoved.type == Piece.KING) {
 			kingRank[_move.pieceMoved.colour] = _move.newRank;
 			kingFile[_move.pieceMoved.colour] = _move.newFile;
 		}
@@ -598,7 +617,7 @@ class Position {
 	// This method updates the current Position with the supplied move.
 	public void PartialUndoMove(Move _move) {
 		// If the piece that was moved is the king, update the cached location.
-		if (_move.pieceMoved instanceof King) {
+		if (_move.pieceMoved.type == Piece.KING) {
 			kingRank[_move.pieceMoved.colour] = _move.oldRank;
 			kingFile[_move.pieceMoved.colour] = _move.oldFile;
 		}
@@ -659,25 +678,22 @@ class Position {
 							// A piece of the opposite colour has been encountered first
 							// in this direction. Determine if the piece is a threat to
 							// the square.
-							if (testPiece instanceof King
-								 && squares[workingRank][workingFile] instanceof King) {
+							if (testPiece.type == Piece.KING
+								 && squares[workingRank][workingFile].type == Piece.KING) {
 								// The square is attacked by opposite king.
 								return true;
-							}
-							if (testPiece instanceof Knight
-								 && squares[workingRank][workingFile] instanceof Knight) {
+							} else if (testPiece.type == Piece.KNIGHT
+								 && squares[workingRank][workingFile].type == Piece.KNIGHT) {
 								// The square is attacked by a knight.
 								return true;
-							}
-							if (testPiece instanceof Bishop &&
-								(squares[workingRank][workingFile] instanceof Bishop
-								||  squares[workingRank][workingFile] instanceof Queen)) {
+							} else if (testPiece .type == Piece.BISHOP &&
+								(squares[workingRank][workingFile].type == Piece.BISHOP
+								||  squares[workingRank][workingFile].type == Piece.QUEEN)) {
 									// The square is attacked by a bishop or queen.
 									return true;
-							}
-							if (testPiece instanceof Rook &&
-								(squares[workingRank][workingFile] instanceof Rook
-								||  squares[workingRank][workingFile] instanceof Queen)) {
+							} else if (testPiece.type == Piece.ROOK &&
+								(squares[workingRank][workingFile].type == Piece.ROOK
+								||  squares[workingRank][workingFile].type == Piece.QUEEN)) {
 									// The square is attacked by a rook or queen.
 									return true;
 							} else
@@ -706,14 +722,14 @@ class Position {
 				// If the king is white, the pawn must be black and at [+1,-1] or [+1,+1]
 				if (squares[workingRank][workingFile] != null
 				&& squares[workingRank][workingFile].colour == Resources.BLACK
-				&&  squares[workingRank][workingFile] instanceof Pawn)
+				&&  squares[workingRank][workingFile].type == Piece.PAWN)
 					return true;
 			}
 			workingFile -= 2;
 			if (workingRank > -1 && workingRank < 8 && workingFile > -1 && workingFile < 8) {
 				if (squares[workingRank][workingFile] != null
 				&& squares[workingRank][workingFile].colour == Resources.BLACK
-				&&  squares[workingRank][workingFile] instanceof Pawn)
+				&&  squares[workingRank][workingFile].type == Piece.PAWN)
 					return true;
 			}
 		} else {
@@ -723,7 +739,7 @@ class Position {
 				// If the king is black, the pawn must be black and at [-1,-1] or [-1,+1]
 				if (squares[workingRank][workingFile] != null
 				&& squares[workingRank][workingFile].colour == Resources.WHITE
-				&&  squares[workingRank][workingFile] instanceof Pawn)
+				&&  squares[workingRank][workingFile].type == Piece.PAWN)
 				return true;
 			}
 			workingFile -= 2;
@@ -731,7 +747,7 @@ class Position {
 			if (workingRank > -1 && workingRank < 8 && workingFile > -1 && workingFile < 8) {
 				if (squares[workingRank][workingFile] != null 
 				&& squares[workingRank][workingFile].colour == Resources.WHITE
-				&&  squares[workingRank][workingFile] instanceof Pawn)
+				&&  squares[workingRank][workingFile].type == Piece.PAWN)
 					return true;
 			}
 		}
@@ -966,7 +982,7 @@ class Position {
 				}
 				if (_theBoard.squares[_rank][_file - 1] != null 
 				    && lastMove != null
-				    && _theBoard.squares[_rank][_file - 1] instanceof Pawn
+				    && _theBoard.squares[_rank][_file - 1].type == Piece.PAWN
 				    && _theBoard.squares[_rank][_file - 1].colour != colour
 				    && _theBoard.squares[_rank][_file - 1] == lastMove.pieceMoved
 				    && Math.abs(lastMove.oldRank - lastMove.newRank) == 2) {
@@ -1008,7 +1024,7 @@ class Position {
 				}
 				if (_theBoard.squares[_rank][_file + 1] != null 
 				    && lastMove != null
-				    && _theBoard.squares[_rank][_file + 1] instanceof Pawn
+				    && _theBoard.squares[_rank][_file + 1].type == Piece.PAWN
 				    && _theBoard.squares[_rank][_file + 1].colour != colour
 				    && _theBoard.squares[_rank][_file + 1] == lastMove.pieceMoved
 				    && Math.abs(lastMove.oldRank - lastMove.newRank) == 2) {
